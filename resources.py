@@ -32,7 +32,7 @@ class Token(Resource):
 
         token = generate_token(u[0].id, u[0].user_salt)
         if not token:
-            return 'error', 403
+            return 'error', 'Failed to generate token', 403
         return 'success', {'token': str(token, 'utf8')}, 201
 
 
