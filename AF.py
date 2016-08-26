@@ -63,19 +63,20 @@ def before_first_request():
 
 
 @app.before_request
-@jsend
+# @jsend
 @orm.db_session
 def before_request():
+    # TODO: Убрать jsonify
     parser = RequestParser()
     parser.add_argument('token', type=str, required=False)
     args = parser.parse_args()
     if args.get('token', None):
         info = decode_token(args['token'])
         if not info:
-            return 'fail', {'message': 'Authorization failed: token is invalid'}, 403
+            return jsonify({'status': 'fail', 'data': {'message': 'Authorization failed: token is invalid'}}), 403
         u = User.select(lambda p: p.id == info['id'])[:]
         if info['user_salt'] != u[0].user_salt:
-            return 'fail', {'message': 'Authorization failed: token is invalid'}, 403
+            return jsonify({'status': 'fail', 'data': {'message': 'Authorization failed: token is invalid'}}), 403
         g.user = u[0]
 
 
