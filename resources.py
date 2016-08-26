@@ -43,7 +43,10 @@ class UserItem(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        return 'success', marshal(User[id], user_marshaller)
+        try:
+            return 'success', {'user': marshal(User[id], user_marshaller)}
+        except orm.core.ObjectNotFound:
+            abort(404)
 
 
 class UserList(Resource):
@@ -71,9 +74,84 @@ class UserList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', marshal(list(User.select()[:]), user_marshaller)
+        return 'success', {'users': marshal(list(User.select()[:]), user_marshaller)}
 
 
 class Test(Resource):
     def post(self):
         abort(500)
+
+
+class PostList(Resource):
+    @login_required
+    @jsend
+    @orm.db_session
+    def post(self):
+        parser = RequestParser()
+        parser.add_argument('title', type=str, required=True)
+        parser.add_argument('content', type=str, required=True)
+        args = parser.parse_args()
+
+        post = Post(title=args['title'], content=args['content'], owner=g.user)
+        db.commit()
+
+        return 'success', {'Location': url_for('postitem', id=post.id)}, 201
+
+    @jsend
+    @orm.db_session
+    def get(self):
+        return 'success', {'post': marshal(list(Post.select()[:]), post_marshaller)}
+
+
+class PostItem(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            return 'success', {'post': marshal(Post[id], post_marshaller)}
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+    @login_required
+    @jsend
+    @orm.db_session
+    def delete(self, id):
+        try:
+            post = Post[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        if post.owner != g.user:
+            return 'fail', {'message': 'You are not the author of this post.'}, 403
+
+        post.delete()
+        db.commit()
+
+        return 'success', {}, 201
+
+    @login_required
+    @jsend
+    @orm.db_session
+    def patch(self, id):
+        try:
+            post = Post[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        if post.owner != g.user:
+            return 'fail', {'message': 'You are not the author of this post.'}, 403
+
+        parser = RequestParser()
+        parser.add_argument('title', type=str, required=False)
+        parser.add_argument('content', type=str, required=False)
+        args = parser.parse_args()
+
+        if args.get('title'):
+            post.title = args['title']
+
+        if args.get('content'):
+            post.content = args['content']
+
+        db.commit()
+
+        return 'success', {}, 202

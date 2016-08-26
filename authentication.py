@@ -8,6 +8,7 @@ from flask import make_response, g
 import jwt
 
 from models import *
+from utils import jsend
 
 
 def generate_token(id, user_salt):
@@ -22,21 +23,23 @@ def verify_token(token):
 
 
 def login_required(f):
+    @jsend
     @wraps(f)
     @orm.db_session
     def wrapper(*args, **kwargs):
         parser = RequestParser()
         parser.add_argument('token', type=str, required=False)
         args = parser.parse_args()
-
         if args.get('token', None):
             token = args['token']
         else:
-            return 'fail', {'message': 'Please enter the token'}, 403
+            return ('fail', {'message': 'Please enter the token'}, 403)
 
         info = verify_token(token)
+        print('info4')
         if not info:
             return 'fail', {'message': 'Token is invalid'}, 403
+
 
         u = User.select(lambda p: p.id == info['id'])[:]
         g.user = u[0]

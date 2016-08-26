@@ -21,5 +21,4 @@ class User(db.Entity):
 class Post(db.Entity):
     title = orm.Required(str)
     content = orm.Required(str)
-
     owner = orm.Required(User)

@@ -4,6 +4,12 @@ import json
 from flask_restful import fields
 from flask import jsonify
 
+class UserIdField(fields.Raw):
+    def format(self, value):
+        return {
+            'id': value.id,
+        }
+
 user_marshaller = {
     'id': fields.Integer,
     'username': fields.String,
@@ -11,6 +17,13 @@ user_marshaller = {
     'avatar': fields.String,
     'description': fields.String,
     'user_salt': fields.String
+}
+
+post_marshaller = {
+    'id': fields.Integer,
+    'title': fields.String,
+    'content': fields.String,
+    'owner': UserIdField,
 }
 
 # token_marshaller = {

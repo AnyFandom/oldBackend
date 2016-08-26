@@ -20,9 +20,6 @@ class MyApi(Api):
         code = getattr(e, 'code', 500)
         return self.make_response( {'status': 'error', 'message': json.loads(str(super(MyApi, self).handle_error(e).data, 'utf8'))['message']}, code )
 
-
-
-
 api = MyApi(app)
 
 CORS(app)
@@ -44,6 +41,9 @@ api.add_resource(resources.UserList, '/users')
 api.add_resource(resources.UserItem, '/users/<int:id>')
 
 api.add_resource(resources.Test, '/test')
+
+api.add_resource(resources.PostList, '/posts')
+api.add_resource(resources.PostItem, '/posts/<int:id>')
 
 
 @app.before_first_request
