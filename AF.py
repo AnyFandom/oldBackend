@@ -2,7 +2,7 @@
 
 import json
 
-from flask import Flask, g
+from flask import Flask, g, jsonify
 from flask_restful import Api, abort
 from flask_cors import CORS, cross_origin
 
@@ -25,9 +25,8 @@ CORS(app)
 
 
 @app.errorhandler(404)
-@jsend
 def method_not_allowed(e):
-    return 'fail', {'message': 'The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.'}, 404
+    return jsonify({'status': 'fail', 'data': {'message': 'The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.'}}), 404
 
 
 api.add_resource(resources.Token, '/token')
