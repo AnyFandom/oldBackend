@@ -1,7 +1,9 @@
+# resources.py
+
 import random
 import string
 
-from flask_restful import Resource, marshal_with
+from flask_restful import Resource, marshal, abort
 from flask_restful.reqparse import RequestParser
 from flask import make_response, url_for, g, request
 
@@ -24,26 +26,28 @@ class Token(Resource):
         if args.get('username', None) and args.get('password', None):
             auth = {'username': args['username'], 'password': args['password']}
         else:
-            return 'fail', {'title': 'Please enter username and password'}, 403
+            return 'fail', {'message': 'Please enter username and password'}, 403
 
         u = User.select(lambda p: p.username == auth['username'])[:]
         if not u or not u[0].password == auth['password']:
-            return 'fail', {'title': 'Wrong username or password'}, 403
+            return 'fail', {'message': 'Incorrect username or password'}, 403
 
         token = generate_token(u[0].id, u[0].user_salt)
         if not token:
-            return 'error', 'Failed to generate token', 403
+            return 'error', 'Failed to generate token', 500
+
         return 'success', {'token': str(token, 'utf8')}, 201
 
 
 class UserItem(Resource):
+    @jsend
     @orm.db_session
-    @marshal_with(user_marshaller)
     def get(self, id):
-        return User[id]
+        return 'success', marshal(User[id], user_marshaller)
 
 
 class UserList(Resource):
+    @jsend
     @orm.db_session
     def post(self):
         parser = RequestParser()
@@ -62,11 +66,14 @@ class UserList(Resource):
 
         db.commit()
 
-        resp = make_response('', 201)
-        resp.headers['Location'] = url_for('useritem', id=u.id)
-        return resp
+        return 'success', {'Location': url_for('useritem', id=u.id)}, 201
 
+    @jsend
     @orm.db_session
-    @marshal_with(user_marshaller)
     def get(self):
-        return list(User.select()[:])
+        return 'success', marshal(list(User.select()[:]), user_marshaller)
+
+
+class Test(Resource):
+    def post(self):
+        abort(500)
