@@ -25,12 +25,12 @@ def before_first_request():
 
 @app.route('/meme')
 @login_required
-def meme():
+def meme(*args, **kwargs):
+    print(args)
     return 'U r logged in, ' + g.user.username
 
 
 @app.route('/')
-@jsend
 def hello_world():
     return 'Hello World!'
 

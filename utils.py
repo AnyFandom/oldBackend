@@ -1,4 +1,5 @@
 from flask_restful import fields
+from flask import jsonify
 
 user_marshaller = {
     'id': fields.Integer,
