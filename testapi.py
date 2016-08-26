@@ -40,5 +40,5 @@ if __name__ == '__main__':
         print(colored("{0}: {1}".format(key,value), 'blue'))
 
     print()
-    
+
     print(colored(str(r.content, 'utf-8'), color))
