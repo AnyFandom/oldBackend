@@ -1,3 +1,5 @@
+# authentication.py
+
 from functools import wraps
 
 from flask_restful.reqparse import RequestParser
@@ -30,11 +32,11 @@ def login_required(f):
         if args.get('token', None):
             token = args['token']
         else:
-            return '', 403
+            return 'fail', {'message': 'Please enter the token'}, 403
 
         info = verify_token(token)
         if not info:
-            return '', 403
+            return 'fail', {'message': 'Token is invalid'}, 403
 
         u = User.select(lambda p: p.id == info['id'])[:]
         g.user = u[0]

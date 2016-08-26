@@ -1,3 +1,6 @@
+# utils.py
+
+import json
 from flask_restful import fields
 
 user_marshaller = {
@@ -18,6 +21,5 @@ def jsend(f):
     def wrapper(*args, **kwargs):
         raw = f(*args, **kwargs)  # ("success", {"token": "eyJhbGciOiJIUzI1NiIsIn"}, 201)
         r = {'status': raw[0], 'data' if raw[0] != 'error' else 'message': raw[1]}
-        return r, raw[2] if len(raw) > 2 else 200
-
+        return json.dumps(r), raw[2] if len(raw) > 2 else 200
     return wrapper

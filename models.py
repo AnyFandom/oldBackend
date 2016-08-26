@@ -1,5 +1,6 @@
+# models.py
+
 from pony import orm
-from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 
 db = orm.Database()
 
