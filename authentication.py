@@ -15,37 +15,40 @@ def generate_token(id, user_salt):
     return jwt.encode({'id': id, 'user_salt': user_salt}, 'VERY SECRET KEY', algorithm='HS256')
 
 
-def verify_token(token):
+def decode_token(token):
     try:
         return jwt.decode(token, 'VERY SECRET KEY', algorithm='HS256')
     except:
         return None
 
 
-def login_required(f):
-    @jsend
-    @wraps(f)
-    @orm.db_session
-    def wrapper(*args, **kwargs):
-        parser = RequestParser()
-        parser.add_argument('token', type=str, required=False)
-        args = parser.parse_args()
-        if args.get('token', None):
-            token = args['token']
-        else:
-            return ('fail', {'message': 'Please enter the token'}, 403)
-
-        info = verify_token(token)
-        print('info4')
-        if not info:
-            return 'fail', {'message': 'Token is invalid'}, 403
+def authorized():
+    return True if g.get('user', None) else False
 
 
-        u = User.select(lambda p: p.id == info['id'])[:]
-        g.user = u[0]
-
-        return f(*args, **kwargs)
-    return wrapper
+# def login_required(f):
+#     @jsend
+#     @wraps(f)
+#     @orm.db_session
+#     def wrapper(*args, **kwargs):
+#         parser = RequestParser()
+#         parser.add_argument('token', type=str, required=False)
+#         args = parser.parse_args()
+#         if args.get('token', None):
+#             token = args['token']
+#         else:
+#             return ('fail', {'message': 'Please enter the token'}, 403)
+#
+#         info = verify_token(token)
+#         print('info4')
+#         if not info:
+#             return 'fail', {'message': 'Token is invalid'}, 403
+#
+#         u = User.select(lambda p: p.id == info['id'])[:]
+#         g.user = u[0]
+#
+#         return f(*args, **kwargs)
+#     return wrapper
 
 
 # @auth.error_handler

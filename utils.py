@@ -4,6 +4,7 @@ import json
 from flask_restful import fields
 from flask import jsonify
 
+
 class UserIdField(fields.Raw):
     def format(self, value):
         return {
@@ -34,6 +35,8 @@ post_marshaller = {
 def jsend(f):
     def wrapper(*args, **kwargs):
         raw = f(*args, **kwargs)  # ("success", {"token": "eyJhbGciOiJIUzI1NiIsIn"}, 201)
+        if not raw:
+            return None
         r = {'status': raw[0], 'data' if raw[0] != 'error' else 'message': raw[1]}
         return r, raw[2] if len(raw) > 2 else 200
     return wrapper

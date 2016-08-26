@@ -83,7 +83,6 @@ class Test(Resource):
 
 
 class PostList(Resource):
-    @login_required
     @jsend
     @orm.db_session
     def post(self):
@@ -112,10 +111,12 @@ class PostItem(Resource):
         except orm.core.ObjectNotFound:
             abort(404)
 
-    @login_required
     @jsend
     @orm.db_session
     def delete(self, id):
+        if not authorized():
+            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
@@ -129,10 +130,11 @@ class PostItem(Resource):
 
         return 'success', {}, 201
 
-    @login_required
     @jsend
     @orm.db_session
     def patch(self, id):
+        if not authorized():
+            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:

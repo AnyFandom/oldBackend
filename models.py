@@ -14,9 +14,6 @@ class User(db.Entity):
     # keys = orm.Set('UserToken')
     posts = orm.Set('Post')
 
-# class UserToken(db.Entity):
-#     token = orm.Required(str)
-#     user = orm.Required(User)
 
 class Post(db.Entity):
     title = orm.Required(str)
