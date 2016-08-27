@@ -1,14 +1,7 @@
 # authentication.py
 
-from functools import wraps
-
-from flask_restful.reqparse import RequestParser
-from flask import make_response, g
-
+from flask import g
 import jwt
-
-from models import *
-from utils import jsend
 
 
 def generate_token(id, user_salt):

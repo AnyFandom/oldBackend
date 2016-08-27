@@ -1,17 +1,18 @@
 #!/usr/bin/python3
 
 import requests
-import argparse, sys
+import argparse
+import sys
 from termcolor import colored
 import json
-from pprint import pprint
 
-def createParser ():
+
+def createParser():
     parser = argparse.ArgumentParser()
-    parser.add_argument ('-t', '--type', default='POST')
-    parser.add_argument ('-d', '--data', default='{}')
-    parser.add_argument ('-u', '--url', default='/token')
-    parser.add_argument ('--http_host', default='http://localhost:5000')
+    parser.add_argument('-t', '--type', default='POST')
+    parser.add_argument('-d', '--data', default='{}')
+    parser.add_argument('-u', '--url', default='/token')
+    parser.add_argument('--http_host', default='http://localhost:5000')
 
     return parser
 
@@ -22,7 +23,7 @@ if __name__ == '__main__':
 
     data = json.loads(namespace.data)
 
-    r = requests.request(namespace.type, namespace.http_host+namespace.url, data=data)
+    r = requests.request(namespace.type, namespace.http_host + namespace.url, data=data)
 
     color = 'white'
     colors = {'success': 'green', 'fail': 'red', 'error': 'yellow'}
@@ -37,7 +38,7 @@ if __name__ == '__main__':
     print(colored('Status code: {0}'.format(r.status_code), 'blue'))
 
     for key, value in r.headers.items():
-        print(colored("{0}: {1}".format(key,value), 'blue'))
+        print(colored("{0}: {1}".format(key, value), 'blue'))
 
     print()
 

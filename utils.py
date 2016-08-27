@@ -1,8 +1,6 @@
 # utils.py
 
-import json
 from flask_restful import fields
-from flask import jsonify
 
 
 class UserIdField(fields.Raw):
@@ -38,5 +36,5 @@ def jsend(f):
         if not raw:
             return None
         r = {'status': raw[0], 'data' if raw[0] != 'error' else 'message': raw[1]}
-        return jsonify(r), raw[2] if len(raw) > 2 else 200
+        return r, raw[2] if len(raw) > 2 else 200
     return wrapper

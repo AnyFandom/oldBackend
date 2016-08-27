@@ -5,9 +5,7 @@ import string
 
 from flask_restful import Resource, marshal, abort
 from flask_restful.reqparse import RequestParser
-from flask import make_response, url_for, g, request
-
-import jwt
+from flask import url_for, g
 
 from models import *
 from utils import *
