@@ -48,7 +48,7 @@ api.add_resource(resources.PostItem, '/posts/<int:id>')
 
 @api.representation('application/json')
 def fix_json_output(data, code, headers=None):
-    resp = make_response(json.dumps(data), code)
+    resp = make_response(data, code)
     resp.headers.extend(headers or {})
     return resp
 
@@ -63,20 +63,19 @@ def before_first_request():
 
 
 @app.before_request
-# @jsend
+@jsend
 @orm.db_session
 def before_request():
-    # TODO: Убрать jsonify
     parser = RequestParser()
     parser.add_argument('token', type=str, required=False)
     args = parser.parse_args()
     if args.get('token', None):
         info = decode_token(args['token'])
         if not info:
-            return jsonify({'status': 'fail', 'data': {'message': 'Authorization failed: token is invalid'}}), 403
+            return 'fail', {'message': 'Authorization failed: token is invalid'}, 403
         u = User.select(lambda p: p.id == info['id'])[:]
         if info['user_salt'] != u[0].user_salt:
-            return jsonify({'status': 'fail', 'data': {'message': 'Authorization failed: token is invalid'}}), 403
+            return 'fail', {'message': 'Authorization failed: token is invalid'}, 403
         g.user = u[0]
 
 
