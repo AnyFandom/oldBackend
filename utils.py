@@ -1,5 +1,6 @@
 # utils.py
 
+from flask import jsonify
 from flask_restful import fields
 
 
@@ -36,5 +37,5 @@ def jsend(f):
         if not raw:
             return None
         r = {'status': raw[0], 'data' if raw[0] != 'error' else 'message': raw[1]}
-        return r, raw[2] if len(raw) > 2 else 200
+        return jsonify(r), raw[2] if len(raw) > 2 else 200
     return wrapper
