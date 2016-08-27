@@ -2,10 +2,11 @@
 
 import json
 
-from flask import Flask, g, jsonify
-from flask_restful import Api, abort
-from flask_cors import CORS, cross_origin
-import argparse, sys
+from flask import Flask, g
+from flask_restful import Api
+from flask_cors import CORS
+import argparse
+import sys
 import resources
 from utils import *
 from models import *
@@ -18,7 +19,7 @@ app = Flask(__name__)
 class MyApi(Api):
     def handle_error(self, e):
         code = getattr(e, 'code', 500)
-        return self.make_response( {'status': 'error', 'message': json.loads(str(super(MyApi, self).handle_error(e).data, 'utf8'))['message']}, code )
+        return self.make_response({'status': 'error', 'message': json.loads(str(super(MyApi, self).handle_error(e).data, 'utf8'))['message']}, code)
 
 api = MyApi(app)
 
