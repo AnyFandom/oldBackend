@@ -5,7 +5,7 @@ import json
 import pickle
 import sys
 
-from flask import Flask, g, make_response
+from flask import Flask, g, jsonify
 from flask_cors import CORS
 from flask_restful import Api
 from flask_restful.reqparse import RequestParser
@@ -30,14 +30,13 @@ CORS(app)
 
 
 @app.errorhandler(404)
-@jsend
 def url_not_found(e):
-    return 'fail', {'message': 'The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.'}, 404
+    return jsonify({'status': 'error', 'message': 'The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.'}), 404
 
 
 @app.errorhandler(405)
 def method_not_allowed(e):
-    return 'fail', {'message': 'The method is not allowed for the requested URL.'}, 405
+    return jsonify({'status': 'fail', 'message': 'The method is not allowed for the requested URL.'}), 405
 
 api.add_resource(resources.Test, '/test')
 
@@ -66,7 +65,6 @@ def before_first_request():
 
 
 @app.before_request
-@jsend
 @orm.db_session
 def before_request():
     parser = RequestParser()
@@ -75,10 +73,12 @@ def before_request():
     if args.get('token', None):
         info = decode_token(args['token'])
         if not info:
-            return 'fail', {'message': 'Authorization failed: token is invalid'}, 403
+            return error('E1001', json=True)
         u = User.select(lambda p: p.id == info['id'])[:]
+        if not u:
+            return error('E1001', json=True)
         if info['user_salt'] != u[0].user_salt:
-            return 'fail', {'message': 'Authorization failed: token is invalid'}, 403
+            return error('E1001', json=True)
         g.user = pickle.dumps(u[0])
 
 

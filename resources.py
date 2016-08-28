@@ -4,7 +4,7 @@ import pickle
 import random
 import string
 
-from flask import g, url_for
+from flask import g, request, url_for
 from flask_restful import Resource, abort, marshal
 from flask_restful.reqparse import RequestParser
 
@@ -15,6 +15,7 @@ from authentication import *
 
 class Test(Resource):
     def post(self):
+        print(request.values.to_dict())
         abort(500)
 
 
@@ -27,14 +28,9 @@ class Token(Resource):
         parser.add_argument('password', type=str, required=True)
         args = parser.parse_args()
 
-        # if args.get('username', None) and args.get('password', None):
-        #     auth = {'username': args['username'], 'password': args['password']}
-        # else:
-        #     return 'fail', {'message': 'Please enter username and password'}, 403
-
         user = User.select(lambda p: p.username == args['username'])[:]
         if not user or not user[0].password == args['password']:
-            return 'fail', {'message': 'Incorrect username or password'}, 403
+            return error('E1002')
 
         token = generate_token(user[0].id, user[0].user_salt)
         if not token:
@@ -110,7 +106,7 @@ class PostList(Resource):
     @orm.db_session
     def post(self):
         if not authorized():
-            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+            return error('E1102')
 
         parser = RequestParser()
         parser.add_argument('title', type=str, required=True)
@@ -126,7 +122,7 @@ class PostList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'post': marshal(list(Post.select()[:]), post_marshaller)}
+        return 'success', {'posts': marshal(list(Post.select()[:]), post_marshaller)}
 
 
 class PostItem(Resource):
@@ -142,7 +138,7 @@ class PostItem(Resource):
     @orm.db_session
     def delete(self, id):
         if not authorized():
-            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+            return error('E1102')
 
         try:
             post = Post[id]
@@ -150,7 +146,7 @@ class PostItem(Resource):
             abort(404)
 
         if post.owner != pickle.loads(g.user):
-            return 'fail', {'message': 'You are not the author of this post.'}, 403
+            return error('E1011')
 
         post.delete()
         db.commit()
@@ -161,14 +157,14 @@ class PostItem(Resource):
     @orm.db_session
     def patch(self, id):
         if not authorized():
-            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+            return error('E1102')
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
         if post.owner != pickle.loads(g.user):
-            return 'fail', {'message': 'You are not the author of this post.'}, 403
+            return error('E1011')
 
         parser = RequestParser()
         parser.add_argument('title', type=str, required=False)
@@ -203,7 +199,7 @@ class CommentList(Resource):
     @orm.db_session
     def post(self):
         if not authorized():
-            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+            return error('E1102')
 
         parser = RequestParser()
         parser.add_argument('post', type=int, required=True)
@@ -213,7 +209,7 @@ class CommentList(Resource):
 
         post = Post.select(lambda p: p.id == args['post'])[:]
         if not post:
-            return 'fail', {'message': 'Post with the specified id does not exist'}, 400
+            return error('E1101')
 
         comment = Comment(post=post[0], parent_id=args['parent_id'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
 
@@ -240,7 +236,7 @@ class CommentItem(Resource):
     @orm.db_session
     def delete(self, id):
         if not authorized():
-            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+            return error('E1102')
 
         try:
             comment = Comment[id]
@@ -248,7 +244,7 @@ class CommentItem(Resource):
             abort(404)
 
         if comment.owner != pickle.loads(g.user):
-            return 'fail', {'message': 'You are not the author of this comment.'}, 403
+            return error('E1021')
 
         comment.delete()
         db.commit()
@@ -259,7 +255,7 @@ class CommentItem(Resource):
     @orm.db_session
     def patch(self, id):
         if not authorized():
-            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+            return error('E1102')
 
         try:
             comment = Comment[id]
@@ -267,7 +263,7 @@ class CommentItem(Resource):
             abort(404)
 
         if comment.owner != pickle.loads(g.user):
-            return 'fail', {'message': 'You are not the author of this comment.'}, 403
+            return error('E1021')
 
         parser = RequestParser()
         parser.add_argument('content', type=str, required=True)
