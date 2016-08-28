@@ -1,15 +1,21 @@
 # resources.py
 
+import pickle
 import random
 import string
 
-from flask_restful import Resource, marshal, abort
+from flask import g, url_for
+from flask_restful import Resource, abort, marshal
 from flask_restful.reqparse import RequestParser
-from flask import url_for, g
 
-from models import *
 from utils import *
+from models import *
 from authentication import *
+
+
+class Test(Resource):
+    def post(self):
+        abort(500)
 
 
 class Token(Resource):
@@ -26,25 +32,15 @@ class Token(Resource):
         else:
             return 'fail', {'message': 'Please enter username and password'}, 403
 
-        u = User.select(lambda p: p.username == auth['username'])[:]
-        if not u or not u[0].password == auth['password']:
+        user = User.select(lambda p: p.username == auth['username'])[:]
+        if not user or not user[0].password == auth['password']:
             return 'fail', {'message': 'Incorrect username or password'}, 403
 
-        token = generate_token(u[0].id, u[0].user_salt)
+        token = generate_token(user[0].id, user[0].user_salt)
         if not token:
             return 'error', 'Failed to generate token', 500
 
         return 'success', {'token': str(token, 'utf8')}, 201
-
-
-class UserItem(Resource):
-    @jsend
-    @orm.db_session
-    def get(self, id):
-        try:
-            return 'success', {'user': marshal(User[id], user_marshaller)}
-        except orm.core.ObjectNotFound:
-            abort(404)
 
 
 class UserList(Resource):
@@ -59,15 +55,15 @@ class UserList(Resource):
         args = parser.parse_args()
 
         salt = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
-        u = User(username=args.username, password=args.password, user_salt=salt)
+        user = User(username=args.username, password=args.password, user_salt=salt)
         if args.get('avatar', None):
-            u.avatar = args['avatar']
+            user.avatar = args['avatar']
         if args.get('description', None):
-            u.description = args['description']
+            user.description = args['description']
 
         db.commit()
 
-        return 'success', {'Location': url_for('useritem', id=u.id)}, 201
+        return 'success', {'Location': url_for('useritem', id=user.id)}, 201
 
     @jsend
     @orm.db_session
@@ -75,21 +71,54 @@ class UserList(Resource):
         return 'success', {'users': marshal(list(User.select()[:]), user_marshaller)}
 
 
-class Test(Resource):
-    def post(self):
-        abort(500)
+class UserItem(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            return 'success', {'user': marshal(User[id], user_marshaller)}
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+
+class UserPostList(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            user = User[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == user)[:]), post_marshaller)}
+
+
+class UserCommentList(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            user = User[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == user)[:]), post_marshaller)}
 
 
 class PostList(Resource):
     @jsend
     @orm.db_session
     def post(self):
+        if not authorized():
+            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+
         parser = RequestParser()
         parser.add_argument('title', type=str, required=True)
         parser.add_argument('content', type=str, required=True)
         args = parser.parse_args()
 
-        post = Post(title=args['title'], content=args['content'], owner=g.user)
+        post = Post(title=args['title'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
+
         db.commit()
 
         return 'success', {'Location': url_for('postitem', id=post.id)}, 201
@@ -120,7 +149,7 @@ class PostItem(Resource):
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if post.owner != g.user:
+        if post.owner != pickle.loads(g.user):
             return 'fail', {'message': 'You are not the author of this post.'}, 403
 
         post.delete()
@@ -138,7 +167,7 @@ class PostItem(Resource):
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if post.owner != g.user:
+        if post.owner != pickle.loads(g.user):
             return 'fail', {'message': 'You are not the author of this post.'}, 403
 
         parser = RequestParser()
@@ -151,6 +180,100 @@ class PostItem(Resource):
 
         if args.get('content'):
             post.content = args['content']
+
+        db.commit()
+
+        return 'success', {}, 202
+
+
+class PostCommentList(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            post = Post[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)[:]), comment_marshaller)}
+
+
+class CommentList(Resource):
+    @jsend
+    @orm.db_session
+    def post(self):
+        if not authorized():
+            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+
+        parser = RequestParser()
+        parser.add_argument('post', type=int, required=True)
+        parser.add_argument('parent_id', type=int, required=True)
+        parser.add_argument('content', type=str, required=True)
+        args = parser.parse_args()
+
+        post = Post.select(lambda p: p.id == args['post'])[:]
+        if not post:
+            return 'fail', {'message': 'Post with the specified id does not exist'}, 400
+
+        comment = Comment(post=post[0], parent_id=args['parent_id'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
+
+        db.commit()
+
+        return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
+
+    @jsend
+    @orm.db_session
+    def get(self):
+        return 'success', {'comments': marshal(list(Comment.select()[:]), comment_marshaller)}
+
+
+class CommentItem(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            return 'success', {'comment': marshal(Comment[id], comment_marshaller)}
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+    @jsend
+    @orm.db_session
+    def delete(self, id):
+        if not authorized():
+            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+
+        try:
+            comment = Comment[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        if comment.owner != pickle.loads(g.user):
+            return 'fail', {'message': 'You are not the author of this comment.'}, 403
+
+        comment.delete()
+        db.commit()
+
+        return 'success', {}, 201
+
+    @jsend
+    @orm.db_session
+    def patch(self, id):
+        if not authorized():
+            return 'fail', {'message': 'You dont have sufficent permissions to access this page'}, 403
+
+        try:
+            comment = Comment[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        if comment.owner != pickle.loads(g.user):
+            return 'fail', {'message': 'You are not the author of this comment.'}, 403
+
+        parser = RequestParser()
+        parser.add_argument('content', type=str, required=True)
+        args = parser.parse_args()
+
+        comment.content = args['content']
 
         db.commit()
 

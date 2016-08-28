@@ -1,13 +1,15 @@
 # AF.py
 
+import argparse
 import json
+import pickle
+import sys
 
 from flask import Flask, g, make_response
+from flask_cors import CORS
 from flask_restful import Api
 from flask_restful.reqparse import RequestParser
-from flask_cors import CORS
-import argparse
-import sys
+
 import resources
 from utils import *
 from models import *
@@ -43,9 +45,15 @@ api.add_resource(resources.Token, '/token')
 
 api.add_resource(resources.UserList, '/users')
 api.add_resource(resources.UserItem, '/users/<int:id>')
+api.add_resource(resources.UserPostList, '/users/<int:id>/posts')
+api.add_resource(resources.UserCommentList, '/users/<int:id>/comments')
 
 api.add_resource(resources.PostList, '/posts')
 api.add_resource(resources.PostItem, '/posts/<int:id>')
+api.add_resource(resources.PostCommentList, '/posts/<int:id>/comments')
+
+api.add_resource(resources.CommentList, '/comments')
+api.add_resource(resources.CommentItem, '/comments/<int:id>')
 
 
 @api.representation('application/json')
@@ -78,7 +86,7 @@ def before_request():
         u = User.select(lambda p: p.id == info['id'])[:]
         if info['user_salt'] != u[0].user_salt:
             return 'fail', {'message': 'Authorization failed: token is invalid'}, 403
-        g.user = u[0]
+        g.user = pickle.dumps(u[0])
 
 
 # say no to that shiet

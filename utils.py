@@ -10,6 +10,20 @@ class UserIdField(fields.Raw):
             'id': value.id,
         }
 
+
+class PostIdField(fields.Raw):
+    def format(self, value):
+        return {
+            'id': value.id,
+        }
+
+
+class CommendIdField(fields.Raw):
+    def format(self, value):
+        return {
+            'id': value.id,
+        }
+
 user_marshaller = {
     'id': fields.Integer,
     'username': fields.String,
@@ -24,6 +38,16 @@ post_marshaller = {
     'title': fields.String,
     'content': fields.String,
     'owner': UserIdField,
+    'date': fields.DateTime(dt_format='iso8601')
+}
+
+comment_marshaller = {
+    'id': fields.Integer,
+    'parent_id': fields.Integer,
+    'post': PostIdField,
+    'owner': UserIdField,
+    'content': fields.String,
+    'date': fields.DateTime(dt_format='iso8601')
 }
 
 # token_marshaller = {
