@@ -22,18 +22,18 @@ class Token(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        parser = RequestParser()
-        parser.add_argument('username', type=str, required=False)
-        parser.add_argument('password', type=str, required=False)
+        parser = RequestParser(bundle_errors=True)
+        parser.add_argument('username', type=str, required=True)
+        parser.add_argument('password', type=str, required=True)
         args = parser.parse_args()
 
-        if args.get('username', None) and args.get('password', None):
-            auth = {'username': args['username'], 'password': args['password']}
-        else:
-            return 'fail', {'message': 'Please enter username and password'}, 403
+        # if args.get('username', None) and args.get('password', None):
+        #     auth = {'username': args['username'], 'password': args['password']}
+        # else:
+        #     return 'fail', {'message': 'Please enter username and password'}, 403
 
-        user = User.select(lambda p: p.username == auth['username'])[:]
-        if not user or not user[0].password == auth['password']:
+        user = User.select(lambda p: p.username == args['username'])[:]
+        if not user or not user[0].password == args['password']:
             return 'fail', {'message': 'Incorrect username or password'}, 403
 
         token = generate_token(user[0].id, user[0].user_salt)

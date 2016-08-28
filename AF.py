@@ -56,13 +56,6 @@ api.add_resource(resources.CommentList, '/comments')
 api.add_resource(resources.CommentItem, '/comments/<int:id>')
 
 
-@api.representation('application/json')
-def fix_json_output(data, code, headers=None):
-    resp = make_response(data, code)
-    resp.headers.extend(headers or {})
-    return resp
-
-
 @app.before_first_request
 def before_first_request():
     parser = argparse.ArgumentParser()
