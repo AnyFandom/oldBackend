@@ -39,9 +39,9 @@ from AF.utils import decode_token, error
 api.add_resource(Token, '/token')
 
 api.add_resource(UserList, '/users')
-api.add_resource(UserItem, '/users/<int:id>')
-api.add_resource(UserPostList, '/users/<int:id>/posts')
-api.add_resource(UserCommentList, '/users/<int:id>/comments')
+api.add_resource(UserItem, '/users/<string:id>')
+api.add_resource(UserPostList, '/users/<string:id>/posts')
+api.add_resource(UserCommentList, '/users/<string:id>/comments')
 
 api.add_resource(PostList, '/posts')
 api.add_resource(PostItem, '/posts/<int:id>')

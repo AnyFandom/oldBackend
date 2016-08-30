@@ -1,7 +1,8 @@
+import pickle
 import random
 import string
 
-from flask import url_for
+from flask import g, url_for
 from flask_restful import Resource, abort, marshal
 from flask_restful.reqparse import RequestParser
 
@@ -9,7 +10,7 @@ from pony import orm
 
 from AF import db
 
-from AF.utils import jsend
+from AF.utils import jsend, authorized
 from AF.models import Comment, Post, User
 from AF.marshallers import user_marshaller, post_marshaller, comment_marshaller
 
@@ -46,31 +47,36 @@ class UserItem(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            return 'success', {'user': marshal(User[id], user_marshaller)}
-        except orm.core.ObjectNotFound:
-            abort(404)
+        if id == 'current' and authorized():
+            return 'success', {'user': marshal(pickle.loads(g.user), user_marshaller)}
+        else:
+            try:
+                return 'success', {'user': marshal(User[id], user_marshaller)}
+            except (orm.core.ObjectNotFound, orm.core.ExprEvalError, ValueError):
+                abort(404)
 
 
 class UserPostList(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            user = User[id]
-        except orm.core.ObjectNotFound:
-            abort(404)
-
-        return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == user)[:]), post_marshaller)}
+        if id == 'current' and authorized():
+            return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == pickle.loads(g.user))[:]), post_marshaller)}
+        else:
+            try:
+                return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == User[id])[:]), post_marshaller)}
+            except (orm.core.ObjectNotFound, orm.core.ExprEvalError, ValueError):
+                abort(404)
 
 
 class UserCommentList(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            user = User[id]
-        except orm.core.ObjectNotFound:
-            abort(404)
-
-        return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == user)[:]), comment_marshaller)}
+        if id == 'current' and authorized():
+            return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == pickle.loads(g.user))[:]), comment_marshaller)}
+        else:
+            try:
+                return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == User[id])[:]), comment_marshaller)}
+            except (orm.core.ObjectNotFound, orm.core.ExprEvalError, ValueError):
+                abort(404)
