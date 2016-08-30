@@ -69,7 +69,7 @@ class CommentItem(Resource):
         comment.delete()
         db.commit()
 
-        return 'success', {}, 201
+        return 'success', None, 201
 
     @jsend
     @orm.db_session
@@ -93,4 +93,4 @@ class CommentItem(Resource):
 
         db.commit()
 
-        return 'success', {}, 202
+        return 'success', None, 202

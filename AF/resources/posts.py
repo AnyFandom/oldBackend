@@ -64,7 +64,7 @@ class PostItem(Resource):
         post.delete()
         db.commit()
 
-        return 'success', {}, 201
+        return 'success', None, 201
 
     @jsend
     @orm.db_session
@@ -92,7 +92,7 @@ class PostItem(Resource):
 
         db.commit()
 
-        return 'success', {}, 202
+        return 'success', None, 202
 
 
 class PostCommentList(Resource):
