@@ -3,13 +3,12 @@ from datetime import datetime
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
-from flask_restful.reqparse import RequestParser
 
 from pony import orm
 
 from AF import db
 
-from AF.utils import authorized, error, jsend
+from AF.utils import authorized, error, jsend, parser
 from AF.models import Post, Comment
 from AF.marshallers import post_marshaller, comment_marshaller
 
@@ -21,10 +20,11 @@ class PostList(Resource):
         if not authorized():
             return error('E1102')
 
-        parser = RequestParser()
-        parser.add_argument('title', type=str, required=True)
-        parser.add_argument('content', type=str, required=True)
-        args = parser.parse_args()
+        args = parser(g.args,
+            ('title', str, True),
+            ('content', str, True))
+        if not args:
+            return error('E1101')
 
         post = Post(title=args['title'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
 
@@ -79,10 +79,9 @@ class PostItem(Resource):
         if post.owner != pickle.loads(g.user):
             return error('E1011')
 
-        parser = RequestParser()
-        parser.add_argument('title', type=str, required=False)
-        parser.add_argument('content', type=str, required=False)
-        args = parser.parse_args()
+        args = parser(g.args,
+            ('title', str, False),
+            ('content', str, False))
 
         if args.get('title'):
             post.title = args['title']

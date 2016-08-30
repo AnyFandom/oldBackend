@@ -1,9 +1,9 @@
+from flask import g
 from flask_restful import Resource
-from flask_restful.reqparse import RequestParser
 
 from pony import orm
 
-from AF.utils import error, generate_token, jsend, get_first
+from AF.utils import error, generate_token, jsend, get_first, parser
 from AF.models import User
 
 
@@ -11,10 +11,11 @@ class Token(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        parser = RequestParser(bundle_errors=True)
-        parser.add_argument('username', type=str, required=True)
-        parser.add_argument('password', type=str, required=True)
-        args = parser.parse_args()
+        args = parser(g.args,
+            ('username', str, True),
+            ('password', str, True))
+        if not args:
+            return error('E1101')
 
         user = get_first(list(User.select(lambda p: p.username == args['username'])[:]))
         if not user or not user.password == args['password']:

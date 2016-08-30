@@ -4,13 +4,12 @@ import string
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
-from flask_restful.reqparse import RequestParser
 
 from pony import orm
 
 from AF import db
 
-from AF.utils import jsend, authorized, error
+from AF.utils import jsend, authorized, error, parser
 from AF.models import Comment, Post, User
 from AF.marshallers import user_marshaller, post_marshaller, comment_marshaller
 
@@ -19,15 +18,16 @@ class UserList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        parser = RequestParser()
-        parser.add_argument('username', type=str, required=True)
-        parser.add_argument('password', type=str, required=True)
-        parser.add_argument('avatar', type=str, required=False)
-        parser.add_argument('description', type=str, required=False)
-        args = parser.parse_args()
+        args = parser(g.args,
+            ('username', str, True),
+            ('password', str, True),
+            ('avatar', str, False),
+            ('description', str, False))
+        if not args:
+            return error('E1101')
 
         salt = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
-        user = User(username=args.username, password=args.password, user_salt=salt)
+        user = User(username=args['username'], password=args['password'], user_salt=salt)
         if args.get('avatar', None):
             user.avatar = args['avatar']
         if args.get('description', None):

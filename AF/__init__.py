@@ -3,10 +3,9 @@ import json
 import pickle
 import sys
 
-from flask import Flask, g, jsonify
+from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 from flask_restful import Api
-from flask_restful.reqparse import RequestParser
 from pony import orm
 
 
@@ -33,7 +32,7 @@ from AF.resources.posts import PostList, PostItem, PostCommentList
 from AF.resources.comments import CommentList, CommentItem
 
 from AF.models import User
-from AF.utils import decode_token, error
+from AF.utils import decode_token, error, parser
 
 
 api.add_resource(Token, '/token')
@@ -53,9 +52,9 @@ api.add_resource(CommentItem, '/comments/<int:id>')
 
 @app.before_first_request
 def before_first_request():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--testing', default='0')
-    namespace = parser.parse_args(sys.argv[1:])
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('-t', '--testing', default='0')
+    namespace = argparser.parse_args(sys.argv[1:])
     db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
     db.generate_mapping(create_tables=True)
 
@@ -63,16 +62,23 @@ def before_first_request():
 @app.before_request
 @orm.db_session
 def before_request():
-    parser = RequestParser()
-    parser.add_argument('token', type=str, required=False)
-    args = parser.parse_args()
+    try:
+        g.args = {**request.values.to_dict(), **request.get_json()}
+    except TypeError:
+        g.args = request.values.to_dict()
+
+    args = parser(g.args,
+        ('token', str, False))
+
     if args.get('token', None):
         info = decode_token(args['token'])
         if not info:
             return error('E1001', json=True)
-        user = User[info['id']]
-        if not user:
+        try:
+            user = User[info['id']]
+        except orm.core.ObjectNotFound:
             return error('E1001', json=True)
+
         if info['user_salt'] != user.user_salt:
             return error('E1001', json=True)
         g.user = pickle.dumps(user)
@@ -85,4 +91,4 @@ def url_not_found(e):
 
 @app.errorhandler(405)
 def method_not_allowed(e):
-    return jsonify({'status': 'fail', 'message': 'The method is not allowed for the requested URL.'}), 405
+    return jsonify({'status': 'error', 'message': 'The method is not allowed for the requested URL.'}), 405
