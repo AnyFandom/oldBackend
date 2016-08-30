@@ -1,0 +1,76 @@
+import random
+import string
+
+from flask import url_for
+from flask_restful import Resource, abort, marshal
+from flask_restful.reqparse import RequestParser
+
+from pony import orm
+
+from AF import db
+
+from AF.utils import jsend
+from AF.models import Comment, Post, User
+from AF.marshallers import user_marshaller, post_marshaller, comment_marshaller
+
+
+class UserList(Resource):
+    @jsend
+    @orm.db_session
+    def post(self):
+        parser = RequestParser()
+        parser.add_argument('username', type=str, required=True)
+        parser.add_argument('password', type=str, required=True)
+        parser.add_argument('avatar', type=str, required=False)
+        parser.add_argument('description', type=str, required=False)
+        args = parser.parse_args()
+
+        salt = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
+        user = User(username=args.username, password=args.password, user_salt=salt)
+        if args.get('avatar', None):
+            user.avatar = args['avatar']
+        if args.get('description', None):
+            user.description = args['description']
+
+        db.commit()
+
+        return 'success', {'Location': url_for('useritem', id=user.id)}, 201
+
+    @jsend
+    @orm.db_session
+    def get(self):
+        return 'success', {'users': marshal(list(User.select()[:]), user_marshaller)}
+
+
+class UserItem(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            return 'success', {'user': marshal(User[id], user_marshaller)}
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+
+class UserPostList(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            user = User[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == user)[:]), post_marshaller)}
+
+
+class UserCommentList(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            user = User[id]
+        except orm.core.ObjectNotFound:
+            abort(404)
+
+        return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == user)[:]), comment_marshaller)}

@@ -1,58 +1,7 @@
 # utils.py
 
-from flask import jsonify
-from flask_restful import fields
-
-
-class UserIdField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-        }
-
-
-class PostIdField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-        }
-
-
-class CommendIdField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-        }
-
-user_marshaller = {
-    'id': fields.Integer,
-    'username': fields.String,
-    'password': fields.String,
-    'avatar': fields.String,
-    'description': fields.String,
-    'user_salt': fields.String
-}
-
-post_marshaller = {
-    'id': fields.Integer,
-    'title': fields.String,
-    'content': fields.String,
-    'owner': UserIdField,
-    'date': fields.DateTime(dt_format='iso8601')
-}
-
-comment_marshaller = {
-    'id': fields.Integer,
-    'parent_id': fields.Integer,
-    'post': PostIdField,
-    'owner': UserIdField,
-    'content': fields.String,
-    'date': fields.DateTime(dt_format='iso8601')
-}
-
-# token_marshaller = {
-#     'token': fields.String
-# }
+import jwt
+from flask import g, jsonify
 
 
 def jsend(f):
@@ -96,3 +45,25 @@ def error(code, json=False):
         return 'fail', {'code': code, 'message': errors[code][0]}, errors[code][1]
     else:
         return jsonify({'status': 'fail', 'data': {'code': code, 'message': errors[code][0]}}), errors[code][1]
+
+
+def generate_token(id, user_salt):
+    return jwt.encode({'id': id, 'user_salt': user_salt}, 'VERY SECRET KEY', algorithm='HS256')
+
+
+def decode_token(token):
+    try:
+        return jwt.decode(token, 'VERY SECRET KEY', algorithm='HS256')
+    except:
+        return None
+
+
+def authorized():
+    return True if g.get('user', None) else False
+
+
+def get_first(iterable, default=None):
+    if iterable:
+        for item in iterable:
+            return item
+    return default
