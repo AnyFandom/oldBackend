@@ -1,9 +1,7 @@
-# models.py
-
 from datetime import datetime
 from pony import orm
 
-db = orm.Database()
+from AF import db
 
 
 class User(db.Entity):
