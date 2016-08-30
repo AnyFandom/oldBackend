@@ -1,5 +1,5 @@
 import pickle
-import datetime
+from datetime import datetime
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
