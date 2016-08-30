@@ -33,6 +33,7 @@ def error(code, json=False):
         # AUTH
         'E1001': ['Token is invalid.', 403],
         'E1002': ['Incorrect username or password.', 403],
+        'E1003': ['You need to enter the token to access this page', 403],
         # POSTS
         'E1011': ['You are not the author of this post.', 403],
         # COMMENTS
