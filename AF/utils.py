@@ -18,13 +18,22 @@ def parser(dictionary, *args):  # (name, type, required)
     resp = {}
     for arg in args:
         item = dictionary.get(arg[0])
-        if arg[2] and (item is None or type(item) != arg[1]):  # if required and (no such item or item is wrong type)
+        if arg[1] == int and isnum(item) is True:  # if argument should be int and it is, but in string
+            resp[arg[0]] = dictionary[arg[0]]
+        elif arg[2] and (item is None or not isinstance(item, arg[1])):  # if required and (no such item or item is wrong type)
             return None
-        elif not arg[2] and (item is None or type(item) != arg[1]):  # if not required and (no such item or item is wrong type)
+        elif not arg[2] and (item is None or not isinstance(item, arg[1])):  # if not required and (no such item or item is wrong type)
             continue
         else:
             resp[arg[0]] = dictionary[arg[0]]
+    return resp
 
+
+def isnum(arg):
+    try:
+        resp = arg.isnumeric()
+    except AttributeError:
+        resp = False
     return resp
 
 
