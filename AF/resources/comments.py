@@ -29,7 +29,7 @@ class CommentList(Resource):
 
         try:
             post = Post[args['post']]
-            parent = Comment[args['parent']] if args.get('parent', None) else None
+            parent = None if not args.get('parent', None) else Comment[args['parent']]
         except (orm.core.ObjectNotFound, KeyError):
             return error('E1101')
 
