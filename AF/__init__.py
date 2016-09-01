@@ -74,6 +74,7 @@ def before_request():
         info = decode_token(args['token'])
         if not info:
             return error('E1001', json=True)
+
         try:
             user = User[info['id']]
         except orm.core.ObjectNotFound:

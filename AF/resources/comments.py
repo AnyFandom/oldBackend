@@ -22,17 +22,24 @@ class CommentList(Resource):
 
         args = parser(g.args,
             ('post', int, True),
-            ('parent_id', int, True),
+            ('parent', int, False),
             ('content', str, True))
         if not args:
             return error('E1101')
 
         try:
             post = Post[args['post']]
-        except orm.core.ObjectNotFound:
+            parent = Comment[args['parent']] if args.get('parent', None) else None
+        except (orm.core.ObjectNotFound, KeyError):
             return error('E1101')
 
-        comment = Comment(post=post, parent_id=args['parent_id'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
+        if parent:
+            if parent.post != post:
+                return error('E1101')
+
+        depth = 0 if parent is None else (parent.depth + 1)
+
+        comment = Comment(post=post, parent=parent, depth=depth, content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
 
         db.commit()
 

@@ -23,8 +23,10 @@ class Post(db.Entity):
 
 
 class Comment(db.Entity):
-    parent_id = orm.Required(int)
+    content = orm.Required(str)
+    answers = orm.Set('Comment', reverse='parent')
+    parent = orm.Optional('Comment', reverse='answers')
+    depth = orm.Required(int)
     post = orm.Required(Post)
     owner = orm.Required(User)
-    content = orm.Required(str)
     date = orm.Required(datetime)

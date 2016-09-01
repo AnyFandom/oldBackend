@@ -1,10 +1,12 @@
 from flask_restful import fields
 
 
-class UserIdField(fields.Raw):
+class UserField(fields.Raw):
     def format(self, value):
         return {
             'id': value.id,
+            'username': value.username,
+            'avatar': value.avatar
         }
 
 
@@ -21,6 +23,7 @@ class CommendIdField(fields.Raw):
             'id': value.id,
         }
 
+
 user_marshaller = {
     'id': fields.Integer,
     'username': fields.String,
@@ -34,15 +37,16 @@ post_marshaller = {
     'id': fields.Integer,
     'title': fields.String,
     'content': fields.String,
-    'owner': UserIdField,
+    'owner': UserField,
     'date': fields.DateTime(dt_format='iso8601')
 }
 
 comment_marshaller = {
     'id': fields.Integer,
-    'parent_id': fields.Integer,
-    'post': PostIdField,
-    'owner': UserIdField,
     'content': fields.String,
+    'parent': CommendIdField,
+    'depth': fields.Integer,
+    'post': PostIdField,
+    'owner': UserField,
     'date': fields.DateTime(dt_format='iso8601')
 }

@@ -98,9 +98,25 @@ class PostCommentList(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
+        args = parser(g.args,
+            ('threaded', int, False))
+
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
-        return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)[:]), comment_marshaller)}
+        if args.get('threaded', None):
+            def recursion(comments):
+                resp = []
+                for comment in comments:
+                    resp.append(comment)
+                    resp.extend(recursion(comment.answers.order_by(Comment.id)))
+                return resp
+
+            resp = Comment.select(lambda p: p.post == post and p.parent is None)[:]  # Получаем все "корневые" комменты
+            resp = recursion(resp)  # Рекурсивно формируем список комментов
+
+            return 'success', {'comments': marshal(resp, comment_marshaller)}
+        else:
+            return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)[:]), comment_marshaller)}
