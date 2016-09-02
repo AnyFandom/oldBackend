@@ -101,11 +101,6 @@ def method_not_allowed(e):
     return jsonify({'status': 'error', 'message': 'The method is not allowed for the requested URL.'}), 405
 
 
-@socketio.on('connect')
-def conn():
-    print(request.namespace)
-
-
 @socketio.on('init')
 @orm.db_session
 def handle_init(token):
