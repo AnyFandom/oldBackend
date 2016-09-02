@@ -8,6 +8,8 @@ from flask_cors import CORS
 from flask_restful import Api
 from pony import orm
 
+from flask_socketio import SocketIO
+
 
 class MyApi(Api):
     def handle_error(self, e):
@@ -16,6 +18,8 @@ class MyApi(Api):
 
 app = Flask(__name__)
 api = MyApi(app)
+
+socketio = SocketIO(app)
 
 CORS(app)
 
@@ -26,6 +30,7 @@ db = orm.Database()
 # -------------------- #
 
 
+import AF.socket_utils
 from AF.resources.token import Token
 from AF.resources.users import UserList, UserItem, UserPostList, UserCommentList
 from AF.resources.posts import PostList, PostItem, PostCommentList
@@ -93,3 +98,9 @@ def url_not_found(e):
 @app.errorhandler(405)
 def method_not_allowed(e):
     return jsonify({'status': 'error', 'message': 'The method is not allowed for the requested URL.'}), 405
+
+
+@app.route('/testsockets')
+def test_sock():
+    socket_utils.say_hi()
+    return '', 200
