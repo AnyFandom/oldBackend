@@ -12,6 +12,7 @@ class User(db.Entity):
     user_salt = orm.Required(str)
     posts = orm.Set('Post')
     comments = orm.Set('Comment')
+    blogs = orm.Set('Blog')
 
 
 class Post(db.Entity):
@@ -24,6 +25,7 @@ class Post(db.Entity):
     owner = orm.Required(User)
     comments = orm.Set('Comment')
     date = orm.Required(datetime)
+    blog = orm.Required('Blog')
 
 
 class Comment(db.Entity):
@@ -34,3 +36,19 @@ class Comment(db.Entity):
     post = orm.Required(Post)
     owner = orm.Required(User)
     date = orm.Required(datetime)
+
+
+class Fandom(db.Entity):
+    title = orm.Required(str)
+    description = orm.Optional(str)
+    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
+    blogs = orm.Set('Blog')
+
+
+class Blog(db.Entity):
+    title = orm.Required(str)
+    description = orm.Optional(str)
+    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
+    fandom = orm.Required(Fandom)
+    posts = orm.Set(Post)
+    owner = orm.Required(User)

@@ -10,14 +10,7 @@ class UserField(fields.Raw):
         }
 
 
-class PostIdField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-        }
-
-
-class CommendIdField(fields.Raw):
+class IdField(fields.Raw):
     def format(self, value):
         return {
             'id': value.id,
@@ -39,15 +32,32 @@ post_marshaller = {
     'content': fields.String,
     'owner': UserField,
     'comment_count': fields.Integer,
-    'date': fields.DateTime(dt_format='iso8601')
+    'date': fields.DateTime(dt_format='iso8601'),
+    'blog': IdField
 }
 
 comment_marshaller = {
     'id': fields.Integer,
     'content': fields.String,
-    'parent': CommendIdField,
+    'parent': IdField,
     'depth': fields.Integer,
-    'post': PostIdField,
+    'post': IdField,
     'owner': UserField,
     'date': fields.DateTime(dt_format='iso8601')
+}
+
+fandom_marshaller = {
+    'id': fields.Integer,
+    'title': fields.String,
+    'description': fields.String,
+    'avatar': fields.String
+}
+
+blog_marshaller = {
+    'id': fields.Integer,
+    'title': fields.String,
+    'description': fields.String,
+    'avatar': fields.String,
+    'fandom': IdField,
+    'owner': UserField
 }
