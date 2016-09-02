@@ -9,7 +9,7 @@ from pony import orm
 from AF import db
 
 from AF.utils import authorized, error, jsend, parser
-from AF.models import Post, Comment
+from AF.models import Blog, Post, Comment
 from AF.marshallers import post_marshaller, comment_marshaller
 
 
@@ -22,11 +22,17 @@ class PostList(Resource):
 
         args = parser(g.args,
             ('title', str, True),
-            ('content', str, True))
+            ('content', str, True),
+            ('blog', int, True))
         if not args:
             return error('E1101')
 
-        post = Post(title=args['title'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
+        try:
+            blog = Blog[args['blog']]
+        except orm.core.ObjectNotFound:
+            return error('E1101')
+
+        post = Post(title=args['title'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow(), blog=blog)
 
         db.commit()
 
@@ -71,6 +77,7 @@ class PostItem(Resource):
     def patch(self, id):
         if not authorized():
             return error('E1102')
+
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
@@ -85,7 +92,6 @@ class PostItem(Resource):
 
         if args.get('title'):
             post.title = args['title']
-
         if args.get('content'):
             post.content = args['content']
 
