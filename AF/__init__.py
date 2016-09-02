@@ -26,6 +26,7 @@ CORS(app)
 app.config.from_object('config')
 db = orm.Database()
 
+users = {}
 
 # -------------------- #
 
@@ -100,7 +101,32 @@ def method_not_allowed(e):
     return jsonify({'status': 'error', 'message': 'The method is not allowed for the requested URL.'}), 405
 
 
+@socketio.on('connect')
+def conn():
+    print(request.namespace)
+
+
+@socketio.on('init')
+@orm.db_session
+def handle_init(token):
+    print('NOW')
+    info = decode_token(token)
+    if not info:
+        print(error('E1001', json=True))
+
+    try:
+        user = User[info['id']]
+    except orm.core.ObjectNotFound:
+        print(error('E1001', json=True))
+
+    if user.id in users.keys():
+        users[user.id].append(request.sid)
+    else:
+        users[user.id] = [request.sid]
+    socketio.emit('my response', users)
+
+
 @app.route('/testsockets')
 def test_sock():
-    socket_utils.say_hi()
+    socket_utils.hi_everyone()
     return '', 200
