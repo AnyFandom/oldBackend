@@ -12,7 +12,7 @@ from AF.utils import authorized, error, jsend, parser
 from AF.models import Post, Comment
 from AF.marshallers import comment_marshaller
 
-from AF.socket_utils import send_update_comments_request
+from AF.socket_utils import send_update_comments_request, send_notification
 
 
 class CommentList(Resource):
@@ -46,7 +46,9 @@ class CommentList(Resource):
         db.commit()
 
         send_update_comments_request(post.id)
-
+        if parent:
+            print('Notification!')
+            send_notification('New answer', 'New answer to you!' + comment.content, comment.parent.owner.id)
         return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
 
     @jsend
