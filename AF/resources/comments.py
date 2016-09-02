@@ -12,6 +12,8 @@ from AF.utils import authorized, error, jsend, parser
 from AF.models import Post, Comment
 from AF.marshallers import comment_marshaller
 
+from AF.socket_utils import send_update_comments_request
+
 
 class CommentList(Resource):
     @jsend
@@ -42,6 +44,8 @@ class CommentList(Resource):
         comment = Comment(post=post, parent=parent, depth=depth, content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
 
         db.commit()
+
+        send_update_comments_request(post.id)
 
         return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
 

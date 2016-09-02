@@ -12,3 +12,7 @@ def hi_user(id):
         socketio.emit('my response', 'Hi, ' + str(id), room=users[id][0])
     except ValueError:
         pass
+
+
+def send_update_comments_request(post_id):
+    socketio.emit('update_comments_request', room='post-' + str(post_id))

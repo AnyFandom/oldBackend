@@ -8,7 +8,7 @@ from flask_cors import CORS
 from flask_restful import Api
 from pony import orm
 
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 
 
 class MyApi(Api):
@@ -119,6 +119,12 @@ def handle_init(token):
     else:
         users[user.id] = [request.sid]
     socketio.emit('my response', users)
+
+
+@socketio.on('join')
+def join(room):
+    print('join', room)
+    join_room(room)
 
 
 @app.route('/testsockets')
