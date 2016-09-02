@@ -15,6 +15,10 @@ class User(db.Entity):
 
 
 class Post(db.Entity):
+    @property
+    def comment_count(self):
+        return len(self.comments)
+
     title = orm.Required(str)
     content = orm.Required(str)
     owner = orm.Required(User)

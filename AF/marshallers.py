@@ -38,6 +38,7 @@ post_marshaller = {
     'title': fields.String,
     'content': fields.String,
     'owner': UserField,
+    'comment_count': fields.Integer,
     'date': fields.DateTime(dt_format='iso8601')
 }
 
