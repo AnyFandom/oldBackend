@@ -36,6 +36,8 @@ from AF.resources.token import Token
 from AF.resources.users import UserList, UserItem, UserPostList, UserCommentList
 from AF.resources.posts import PostList, PostItem, PostCommentList
 from AF.resources.comments import CommentList, CommentItem
+from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList
+from AF.resources.blogs import BlogList, BlogItem, BlogPostList
 
 from AF.models import User
 from AF.utils import decode_token, error, parser
@@ -54,6 +56,14 @@ api.add_resource(PostCommentList, '/posts/<int:id>/comments')
 
 api.add_resource(CommentList, '/comments')
 api.add_resource(CommentItem, '/comments/<int:id>')
+
+api.add_resource(FandomList, '/fandoms')
+api.add_resource(FandomItem, '/fandoms/<int:id>')
+api.add_resource(FandomBlogList, '/fandoms/<int:id>/blogs')
+
+api.add_resource(BlogList, '/blogs')
+api.add_resource(BlogItem, '/blogs/<int:id>')
+api.add_resource(BlogPostList, '/blogs/<int:id>/posts')
 
 
 @app.before_first_request
