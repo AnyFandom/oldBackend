@@ -41,7 +41,7 @@ class CommentList(Resource):
 
         depth = 0 if parent is None else (parent.depth + 1)
 
-        comment = Comment(post=post, parent=parent, depth=depth, content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow())
+        comment = Comment(post=post, parent=parent, depth=depth, content=args['content'], owner=pickle.loads(g.user))
 
         db.commit()
 

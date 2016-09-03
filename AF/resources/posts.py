@@ -32,7 +32,7 @@ class PostList(Resource):
         except orm.core.ObjectNotFound:
             return error('E1101')
 
-        post = Post(title=args['title'], content=args['content'], owner=pickle.loads(g.user), date=datetime.utcnow(), blog=blog)
+        post = Post(title=args['title'], content=args['content'], owner=pickle.loads(g.user), blog=blog)
 
         db.commit()
 

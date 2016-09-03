@@ -1,6 +1,4 @@
 import pickle
-import random
-import string
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
@@ -26,8 +24,7 @@ class UserList(Resource):
         if not args:
             return error('E1101')
 
-        salt = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
-        user = User(username=args['username'], password=args['password'], user_salt=salt)
+        user = User(username=args['username'], password=args['password'])
         if args.get('avatar', None):
             user.avatar = args['avatar']
         if args.get('description', None):

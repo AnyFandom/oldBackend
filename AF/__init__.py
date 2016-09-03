@@ -39,7 +39,7 @@ from AF.resources.comments import CommentList, CommentItem
 from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
 
-from AF.models import User
+from AF.models import User, Fandom, Blog, Post, Comment
 from AF.utils import decode_token, error, parser
 
 
@@ -73,6 +73,14 @@ def before_first_request():
     namespace = argparser.parse_args(sys.argv[1:])
     db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
     db.generate_mapping(create_tables=True)
+    if namespace.testing:
+        with orm.db_session:
+            u = User(username='ADMEN', password='123454321')
+            f = Fandom(title='Test fandom')
+            b = Blog(title='Test blog', fandom=f, owner=u)
+            p = Post(title='Test post', content='Lorem ipsum dolor', owner=u, blog=b)
+            c = Comment(content='Test comment', depth=0, parent=None, post=p, owner=u)
+            db.commit()
 
 
 @app.before_request
@@ -117,12 +125,12 @@ def handle_init(token):
     print('NOW')
     info = decode_token(token)
     if not info:
-        print(error('E1001', json=True))
+        return error('E1001', json=True)
 
     try:
         user = User[info['id']]
     except orm.core.ObjectNotFound:
-        print(error('E1001', json=True))
+        return error('E1001', json=True)
 
     if user.id in users.keys():
         users[user.id].append(request.sid)
