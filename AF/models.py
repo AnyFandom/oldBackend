@@ -12,7 +12,8 @@ class User(db.Entity):
     description = orm.Optional(str)
     avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
     user_salt = orm.Optional(str, default=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16)))
-    date_add = orm.Optional(datetime, default=datetime.utcnow())
+    registration_date = orm.Optional(datetime, default=datetime.utcnow())
+
     posts = orm.Set('Post')
     comments = orm.Set('Comment')
     blogs = orm.Set('Blog')
