@@ -53,7 +53,7 @@ class BlogItem(Resource):
     @orm.db_session
     def get(self, id):
         try:
-            return 'success', {'blog': marshal(Fandom[id], blog_marshaller)}
+            return 'success', {'blog': marshal(Blog[id], blog_marshaller)}
         except orm.core.ObjectNotFound:
             abort(404)
 
