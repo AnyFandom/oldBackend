@@ -17,7 +17,7 @@ class PostList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        if not authorized():
+        if not authorized('user'):
             return error('E1102')
 
         args = parser(g.args,
@@ -56,13 +56,14 @@ class PostItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
             abort(404)
+
+        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', 'badmin', fandom=post.blog.fandom, blog=post.blog, owner=post.owner):
+            return error('E1102')
+
 
         if post.owner != pickle.loads(g.user):
             return error('E1011')

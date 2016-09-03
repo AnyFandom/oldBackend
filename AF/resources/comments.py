@@ -19,7 +19,7 @@ class CommentList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        if not authorized():
+        if not authorized('user'):
             return error('E1102')
 
         args = parser(g.args,
@@ -69,16 +69,13 @@ class CommentItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             comment = Comment[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if comment.owner != pickle.loads(g.user):
-            return error('E1021')
+        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', 'badmin', 'bmoder', fandom=comment.blog.fandom, blog=comment.blog, owner=comment.owner):
+            return error('E1102')
 
         comment.delete()
         db.commit()
@@ -88,20 +85,14 @@ class CommentItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             comment = Comment[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if comment.owner != pickle.loads(g.user):
-            return error('E1021')
+        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', 'badmin', 'bmoder', fandom=comment.blog.fandom, blog=comment.blog, owner=comment.owner):
+            return error('E1102')
 
-        # parser = RequestParser()
-        # parser.add_argument('content', type=str, required=True)
-        # args = parser.parse_args()
         args = parser(g.args,
             ('content', str, True))
         if not args:

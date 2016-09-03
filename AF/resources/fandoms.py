@@ -14,7 +14,7 @@ class FandomList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        if not authorized():
+        if not authorized('sadmin'):
             return error('E1102')
 
         args = parser(g.args,
@@ -52,13 +52,13 @@ class FandomItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             fandom = Fandom[id]
         except orm.core.ObjectNotFound:
             abort(404)
+
+        if not authorized('sadmin'):
+            return error('E1102')
 
         fandom.delete()
         db.commit()
@@ -68,13 +68,13 @@ class FandomItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             fandom = Fandom[id]
         except orm.code.ObjectNotFound:
             return abort(404)
+
+        if not authorized('sadmin', 'fadmin', fandom=fandom, owner=fandom.owner):
+            return error('E1102')
 
         args = parser(g.args,
             ('title', str, False),

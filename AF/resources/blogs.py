@@ -16,7 +16,7 @@ class BlogList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        if not authorized():
+        if not authorized('user'):
             return error('E1102')
 
         args = parser(g.args,
@@ -60,16 +60,13 @@ class BlogItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             blog = Blog[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if blog.owner != pickle.loads(g.user):
-            return error('E1101')
+        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', fandom=blog.fandom, owner=pickle.loads(g.user)):
+            return error('E1102')
 
         blog.delete()
         db.commit()
@@ -79,13 +76,13 @@ class BlogItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             blog = Blog[id]
         except orm.code.ObjectNotFound:
             return abort(404)
+
+        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', 'badmin', fandom=blog.fandom, blog=blog, owner=pickle.loads(g.user)):
+            return error('E1102')
 
         args = parser(g.args,
             ('title', str, False),

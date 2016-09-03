@@ -1,7 +1,9 @@
-# utils.py
+import pickle
 
 import jwt
 from flask import g, jsonify
+
+from AF.models import Super
 
 
 def jsend(f):
@@ -68,8 +70,61 @@ def decode_token(token):
         return None
 
 
-def authorized():
-    return True if g.get('user', None) else False
+def authorized(blog=None, fandom=None, owner=None, *args):
+    try:
+        user = pickle.loads(g.user)
+    except KeyError:
+        return []
+
+    resp = []
+
+    if user == owner:
+        resp.append('owner')
+
+    for arg in args:
+        if arg == 'user':
+            resp.append('user')
+
+        elif arg == 'sadmin' or arg == 'smoder':
+            super = get_first(Super.select(lambda p: p.user == user)[:])
+            if super is not None:
+                if arg == 'sadmin' and super.role == 0:
+                    resp.append('sadmin')
+                if arg == 'smoder' and super.role == 1:
+                    resp.append('smoder')
+
+        elif arg == 'fadmin' or arg == 'fmoder':
+            if arg == 'fadmin' and user in fandom.admins:
+                resp.append('fadmin')
+            if arg == 'fmoder' and user in fandom.admins:
+                resp.append('fmoder')
+
+        elif arg == 'badmin' or arg == 'bmoder':
+            if arg == 'badmin' and user in blog.admins:
+                resp.append('badmin')
+            if arg == 'bmoder' and user in blog.moders:
+                resp.append('bmoder')
+
+    # for key in kwargs:
+    #     if key == 'owner':
+    #         owner = kwargs[key]
+    #         if user == owner:
+    #             resp.append('owner')
+    #     elif key == 'fadmin' or key == 'fmoder':
+    #         fandom = kwargs[key]
+    #         if key == 'fadmin' and user in fandom.admins:
+    #             resp.append('fadmin')
+    #         if key == 'fmoder' and user in fandom.moders:
+    #             resp.append('fmoders')
+    #
+    #     elif key == 'badmin' or key == 'bmoder':
+    #         blog = kwargs[key]
+    #         if key == 'badmin' and user in blog.admins:
+    #             resp.append('badmin')
+    #         if key == 'bmoder' and user in blog.moders:
+    #             resp.append('bmoder')
+
+    return resp
 
 
 def get_first(iterable, default=None):

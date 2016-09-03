@@ -18,6 +18,12 @@ class User(db.Entity):
     comments = orm.Set('Comment')
     blogs = orm.Set('Blog')
 
+    super = orm.Optional('Super')
+    admin_in_fandoms = orm.Set('Fandom', reverse='admins')
+    moder_in_fandoms = orm.Set('Fandom', reverse='moders')
+    admin_in_blogs = orm.Set('Blog', reverse='admins')
+    moder_in_blogs = orm.Set('Blog', reverse='moders')
+
 
 class Post(db.Entity):
     @property
@@ -49,6 +55,9 @@ class Fandom(db.Entity):
     date = orm.Optional(datetime, default=datetime.utcnow())
     blogs = orm.Set('Blog')
 
+    admins = orm.Set(User, reverse='admin_in_fandoms')
+    moders = orm.Set(User, reverse='moder_in_fandoms')
+
 
 class Blog(db.Entity):
     title = orm.Required(str)
@@ -58,3 +67,11 @@ class Blog(db.Entity):
     fandom = orm.Required(Fandom)
     posts = orm.Set(Post)
     owner = orm.Required(User)
+
+    admins = orm.Set(User, reverse='admin_in_blogs')
+    moders = orm.Set(User, reverse='moder_in_blogs')
+
+
+class Super(db.Entity):
+    user = orm.Required(User)
+    role = orm.Required(bool)  # 0 - admin, 1 - user

@@ -17,6 +17,11 @@ class IdField(fields.Raw):
         }
 
 
+class SuperRoleField(fields.Raw):
+    def format(self, value):
+        return 'supermoder' if value else 'superadmin'
+
+
 user_marshaller = {
     'id': fields.Integer,
     'username': fields.String,
@@ -60,4 +65,10 @@ blog_marshaller = {
     'avatar': fields.String,
     'fandom': IdField,
     'owner': UserField
+}
+
+super_marshaller = {
+    'id': fields.Integer,
+    'user': UserField,
+    # 'role': fields.Boolean
 }

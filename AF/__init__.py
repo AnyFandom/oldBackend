@@ -38,6 +38,7 @@ from AF.resources.posts import PostList, PostItem, PostCommentList
 from AF.resources.comments import CommentList, CommentItem
 from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
+from AF.resources.super import AdminList, ModerList
 
 from AF.models import User, Fandom, Blog, Post, Comment
 from AF.utils import decode_token, error, parser
@@ -64,6 +65,9 @@ api.add_resource(FandomBlogList, '/fandoms/<int:id>/blogs')
 api.add_resource(BlogList, '/blogs')
 api.add_resource(BlogItem, '/blogs/<int:id>')
 api.add_resource(BlogPostList, '/blogs/<int:id>/posts')
+
+api.add_resource(AdminList, '/super/admins')
+api.add_resource(ModerList, '/super/moders')
 
 
 @app.before_first_request
