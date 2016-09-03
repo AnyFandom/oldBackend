@@ -73,7 +73,7 @@ def before_first_request():
     namespace = argparser.parse_args(sys.argv[1:])
     db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
     db.generate_mapping(create_tables=True)
-    if namespace.testing:
+    if namespace.testing == '1':
         with orm.db_session:
             u = User(username='ADMEN', password='123454321')
             f = Fandom(title='Test fandom')
