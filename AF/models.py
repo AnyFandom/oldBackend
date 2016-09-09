@@ -7,22 +7,19 @@ from AF import db
 
 
 class User(db.Entity):
+    id = orm.PrimaryKey(int, auto=True)
+
     username = orm.Required(str)
     password = orm.Required(str)
     description = orm.Optional(str)
-    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
-    user_salt = orm.Optional(str, default=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16)))
+    avatar = orm.Optional(str, default="https://static.lunavod.ru/img/users/1/avatar_100x100.png")
+    user_salt = orm.Optional(str, default=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32)))
     registration_date = orm.Optional(datetime, default=datetime.utcnow())
 
+    rights = orm.Set('Staff')
+    blogs = orm.Set('Blog')
     posts = orm.Set('Post')
     comments = orm.Set('Comment')
-    blogs = orm.Set('Blog')
-
-    super = orm.Optional('Super')
-    admin_in_fandoms = orm.Set('Fandom', reverse='admins')
-    moder_in_fandoms = orm.Set('Fandom', reverse='moders')
-    admin_in_blogs = orm.Set('Blog', reverse='admins')
-    moder_in_blogs = orm.Set('Blog', reverse='moders')
 
 
 class Post(db.Entity):
@@ -30,6 +27,7 @@ class Post(db.Entity):
     def comment_count(self):
         return len(self.comments)
 
+    id = orm.PrimaryKey(int, auto=True)
     title = orm.Required(str)
     content = orm.Required(str)
     owner = orm.Required(User)
@@ -39,6 +37,7 @@ class Post(db.Entity):
 
 
 class Comment(db.Entity):
+    id = orm.PrimaryKey(int, auto=True)
     content = orm.Required(str)
     answers = orm.Set('Comment', reverse='parent')
     parent = orm.Optional('Comment', reverse='answers')
@@ -49,29 +48,31 @@ class Comment(db.Entity):
 
 
 class Fandom(db.Entity):
+    id = orm.PrimaryKey(int, auto=True)
     title = orm.Required(str)
     description = orm.Optional(str)
-    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
+    avatar = orm.Optional(str, default="https://static.lunavod.ru/img/users/1/avatar_100x100.png")
     date = orm.Optional(datetime, default=datetime.utcnow())
     blogs = orm.Set('Blog')
-
-    admins = orm.Set(User, reverse='admin_in_fandoms')
-    moders = orm.Set(User, reverse='moder_in_fandoms')
+    staff = orm.Set('Staff')
 
 
 class Blog(db.Entity):
+    id = orm.PrimaryKey(int, auto=True)
     title = orm.Required(str)
     description = orm.Optional(str)
-    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
+    avatar = orm.Optional(str, default="https://static.lunavod.ru/img/users/1/avatar_100x100.png")
     date = orm.Optional(datetime, default=datetime.utcnow())
     fandom = orm.Required(Fandom)
     posts = orm.Set(Post)
     owner = orm.Required(User)
-
-    admins = orm.Set(User, reverse='admin_in_blogs')
-    moders = orm.Set(User, reverse='moder_in_blogs')
+    staff = orm.Set('Staff')
 
 
-class Super(db.Entity):
+class Staff(db.Entity):
+    id = orm.PrimaryKey(int, auto=True)
     user = orm.Required(User)
-    role = orm.Required(bool)  # 0 - admin, 1 - user
+    type = orm.Required(int)  # 1 - Global, 2 - Fandom, 3 - Blog
+    role = orm.Required(int)  # 1 - Admin, 2 - Moder
+    fandom = orm.Optional(Fandom)
+    blog = orm.Optional(Blog)

@@ -36,9 +36,9 @@ from AF.resources.token import Token
 from AF.resources.users import UserList, UserItem, UserPostList, UserCommentList
 from AF.resources.posts import PostList, PostItem, PostCommentList
 from AF.resources.comments import CommentList, CommentItem
-from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList
-from AF.resources.blogs import BlogList, BlogItem, BlogPostList
-from AF.resources.super import AdminList, ModerList
+from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList, FandomStaffList
+from AF.resources.blogs import BlogList, BlogItem, BlogPostList, BlogStaffList
+from AF.resources.staff import StaffList, StaffItem
 
 from AF.models import User, Fandom, Blog, Post, Comment
 from AF.utils import decode_token, error, parser
@@ -61,13 +61,15 @@ api.add_resource(CommentItem, '/comments/<int:id>')
 api.add_resource(FandomList, '/fandoms')
 api.add_resource(FandomItem, '/fandoms/<int:id>')
 api.add_resource(FandomBlogList, '/fandoms/<int:id>/blogs')
+api.add_resource(FandomStaffList, '/fandoms/<int:id>/staff')
 
 api.add_resource(BlogList, '/blogs')
 api.add_resource(BlogItem, '/blogs/<int:id>')
 api.add_resource(BlogPostList, '/blogs/<int:id>/posts')
+api.add_resource(BlogStaffList, '/blogs/<int:id>/staff')
 
-api.add_resource(AdminList, '/super/admins')
-api.add_resource(ModerList, '/super/moders')
+api.add_resource(StaffList, '/staff')
+api.add_resource(StaffItem, '/staff/<int:id>')
 
 
 @app.before_first_request

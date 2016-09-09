@@ -37,7 +37,7 @@ class UserList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'users': marshal(list(User.select()[:]), user_marshaller)}
+        return 'success', {'users': marshal(list(User.select()), user_marshaller)}
 
 
 class UserItem(Resource):
@@ -45,7 +45,7 @@ class UserItem(Resource):
     @orm.db_session
     def get(self, id):
         if id == 'current':
-            if authorized():
+            if authorized(0):
                 return 'success', {'user': marshal(pickle.loads(g.user), user_marshaller)}
             else:
                 return error('E1003')
@@ -61,13 +61,13 @@ class UserPostList(Resource):
     @orm.db_session
     def get(self, id):
         if id == 'current':
-            if authorized():
-                return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == pickle.loads(g.user))[:]), post_marshaller)}
+            if authorized(0):
+                return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == pickle.loads(g.user))), post_marshaller)}
             else:
                 return error('E1003')
         else:
             try:
-                return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == User[id])[:]), post_marshaller)}
+                return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == User[id])), post_marshaller)}
             except (orm.core.ObjectNotFound, orm.core.ExprEvalError):
                 abort(404)
 
@@ -77,12 +77,12 @@ class UserCommentList(Resource):
     @orm.db_session
     def get(self, id):
         if id == 'current':
-            if authorized():
-                return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == pickle.loads(g.user))[:]), comment_marshaller)}
+            if authorized(0):
+                return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == pickle.loads(g.user))), comment_marshaller)}
             else:
                 return error('E1003')
         else:
             try:
-                return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == User[id])[:]), comment_marshaller)}
+                return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == User[id])), comment_marshaller)}
             except (orm.core.ObjectNotFound, orm.core.ExprEvalError):
                 abort(404)

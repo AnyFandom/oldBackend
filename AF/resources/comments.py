@@ -1,5 +1,4 @@
 import pickle
-from datetime import datetime
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
@@ -19,7 +18,7 @@ class CommentList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        if not authorized('user'):
+        if not authorized(0):
             return error('E1102')
 
         args = parser(g.args,
@@ -54,7 +53,7 @@ class CommentList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'comments': marshal(list(Comment.select()[:]), comment_marshaller)}
+        return 'success', {'comments': marshal(list(Comment.select()), comment_marshaller)}
 
 
 class CommentItem(Resource):
@@ -74,7 +73,7 @@ class CommentItem(Resource):
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', 'badmin', 'bmoder', fandom=comment.blog.fandom, blog=comment.blog, owner=comment.owner):
+        if not authorized(11, 12, 21, 22, 30, 31, 32, fandom=comment.blog.fandom, blog=comment.blog, owner=comment.owner):  # GAdmin, GModer, FAdmin, FModer, BOwner, BAdmin, BModer, OWNER
             return error('E1102')
 
         comment.delete()
@@ -90,7 +89,7 @@ class CommentItem(Resource):
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', 'badmin', 'bmoder', fandom=comment.blog.fandom, blog=comment.blog, owner=comment.owner):
+        if not authorized(11, 12, 21, 22, 30, 31, 32, fandom=comment.blog.fandom, blog=comment.blog, owner=comment.owner):  # GAdmin, GModer, FAdmin, FModer, BOwner, BAdmin, BModer, OWNER
             return error('E1102')
 
         args = parser(g.args,

@@ -17,7 +17,7 @@ class Token(Resource):
         if not args:
             return error('E1101')
 
-        user = get_first(list(User.select(lambda p: p.username == args['username'])[:]))
+        user = get_first(list(User.select(lambda p: p.username == args['username'])))
         if not user or not user.password == args['password']:
             return error('E1002')
 

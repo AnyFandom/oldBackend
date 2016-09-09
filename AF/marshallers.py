@@ -17,9 +17,14 @@ class IdField(fields.Raw):
         }
 
 
-class SuperRoleField(fields.Raw):
+class TypeField(fields.Raw):
     def format(self, value):
-        return 'supermoder' if value else 'superadmin'
+        return 'Global' if value == 1 else 'Fandom' if value == 2 else 'Blog'
+
+
+class RoleField(fields.Raw):
+    def format(self, value):
+        return 'Admin' if value == 1 else 'Moder'
 
 
 user_marshaller = {
@@ -67,8 +72,11 @@ blog_marshaller = {
     'owner': UserField
 }
 
-super_marshaller = {
+staff_marshaller = {
     'id': fields.Integer,
     'user': UserField,
-    # 'role': fields.Boolean
+    'type': TypeField,
+    'role': RoleField,
+    'fandom': IdField,
+    'blog': IdField
 }

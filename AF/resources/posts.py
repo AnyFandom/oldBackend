@@ -1,5 +1,4 @@
 import pickle
-from datetime import datetime
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
@@ -17,7 +16,7 @@ class PostList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        if not authorized('user'):
+        if not authorized(0):  # User
             return error('E1102')
 
         args = parser(g.args,
@@ -41,7 +40,7 @@ class PostList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'posts': marshal(list(Post.select()[:]), post_marshaller)}
+        return 'success', {'posts': marshal(list(Post.select()), post_marshaller)}
 
 
 class PostItem(Resource):
@@ -61,12 +60,8 @@ class PostItem(Resource):
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if not authorized('sadmin', 'smoder', 'fadmin', 'fmoder', 'badmin', fandom=post.blog.fandom, blog=post.blog, owner=post.owner):
+        if not authorized(11, 12, 21, 22, 30, 31, fandom=post.blog.fandom, blog=post.blog, owner=post.owner):  # GAdmin, GModer, FAdmin, FModer, BOwner, BAdmin, OWNER
             return error('E1102')
-
-
-        if post.owner != pickle.loads(g.user):
-            return error('E1011')
 
         post.delete()
         db.commit()
@@ -76,16 +71,13 @@ class PostItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
-        if post.owner != pickle.loads(g.user):
-            return error('E1011')
+        if not authorized(11, 12, 21, 22, 30, 31, 32, fandom=post.blog.fandom, blog=post.blog, owner=post.owner):  # GAdmin, GModer, FAdmin, FModer, BOwner, BAmdin, BModer, OWNER
+            return error('E1102')
 
         args = parser(g.args,
             ('title', str, False),
@@ -121,9 +113,9 @@ class PostCommentList(Resource):
                     resp.extend(recursion(comment.answers.order_by(Comment.id)))
                 return resp
 
-            resp = Comment.select(lambda p: p.post == post and p.parent is None)[:]  # Получаем все "корневые" комменты
+            resp = list(Comment.select(lambda p: p.post == post and p.parent is None))  # Получаем все "корневые" комменты
             resp = recursion(resp)  # Рекурсивно формируем список комментов
 
             return 'success', {'comments': marshal(resp, comment_marshaller)}
         else:
-            return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)[:]), comment_marshaller)}
+            return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)), comment_marshaller)}
