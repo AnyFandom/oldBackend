@@ -40,30 +40,31 @@ from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
 
 from AF.models import User, Fandom, Blog, Post, Comment
-from AF.utils import decode_token, error, parser
+from AF.utils import Error, parser
 
 
 api.add_resource(Token, '/token')
-
+###
 api.add_resource(UserList, '/users')
-api.add_resource(UserItem, '/users/<string:id>')
-api.add_resource(UserPostList, '/users/<string:id>/posts')
-api.add_resource(UserCommentList, '/users/<string:id>/comments')
 
-api.add_resource(PostList, '/posts')
-api.add_resource(PostItem, '/posts/<int:id>')
-api.add_resource(PostCommentList, '/posts/<int:id>/comments')
-
-api.add_resource(CommentList, '/comments')
-api.add_resource(CommentItem, '/comments/<int:id>')
-
+api.add_resource(UserItem, '/users/current', '/users/id/<int:id>', '/users/profile/<string:username>')
+api.add_resource(UserPostList, '/users/current/posts', '/users/id/<int:id>/posts', '/users/profile/<string:username>/posts')
+api.add_resource(UserCommentList, '/users/current/comments', '/users/id/<int:id>/comments', '/users/profile/<string:username>/comments')
+###
 api.add_resource(FandomList, '/fandoms')
 api.add_resource(FandomItem, '/fandoms/<int:id>')
 api.add_resource(FandomBlogList, '/fandoms/<int:id>/blogs')
-
+###
 api.add_resource(BlogList, '/blogs')
 api.add_resource(BlogItem, '/blogs/<int:id>')
 api.add_resource(BlogPostList, '/blogs/<int:id>/posts')
+###
+api.add_resource(PostList, '/posts')
+api.add_resource(PostItem, '/posts/<int:id>')
+api.add_resource(PostCommentList, '/posts/<int:id>/comments')
+###
+api.add_resource(CommentList, '/comments')
+api.add_resource(CommentItem, '/comments/<int:id>')
 
 
 @app.before_first_request
@@ -95,17 +96,10 @@ def before_request():
         ('token', str, False))
 
     if args.get('token', None):
-        info = decode_token(args['token'])
-        if not info:
-            return error('E1001', json=True)
+        user = User.check_auth_token(args['token'])
+        if not user:
+            raise Error('E1001')
 
-        try:
-            user = User[info['id']]
-        except orm.core.ObjectNotFound:
-            return error('E1001', json=True)
-
-        if info['user_salt'] != user.user_salt:
-            return error('E1001', json=True)
         g.user = pickle.dumps(user)
 
 
@@ -119,18 +113,18 @@ def method_not_allowed(e):
     return jsonify({'status': 'error', 'message': 'The method is not allowed for the requested URL.'}), 405
 
 
+@app.errorhandler(Error)
+def handle_error(error):
+    return jsonify(error.to_dict()), error.code
+
+
 @socketio.on('init')
 @orm.db_session
 def handle_init(token):
     print('NOW')
-    info = decode_token(token)
-    if not info:
-        return error('E1001', json=True)
-
-    try:
-        user = User[info['id']]
-    except orm.core.ObjectNotFound:
-        return error('E1001', json=True)
+    user = User.check_auth_token(token)
+    if not user:
+        raise Error('E1001')
 
     if user.id in users.keys():
         users[user.id].append(request.sid)
@@ -147,5 +141,5 @@ def join(room):
 
 @app.route('/testsockets')
 def test_sock():
-    socket_utils.hi_everyone()
+    AF.socket_utils.hi_everyone()
     return '', 200

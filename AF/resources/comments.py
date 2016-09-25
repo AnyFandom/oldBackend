@@ -1,14 +1,13 @@
 import pickle
-from datetime import datetime
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
 
 from pony import orm
 
-from AF import db
+from AF import app, db
 
-from AF.utils import authorized, error, jsend, parser
+from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Post, Comment
 from AF.marshallers import comment_marshaller
 
@@ -20,28 +19,29 @@ class CommentList(Resource):
     @orm.db_session
     def post(self):
         if not authorized():
-            return error('E1102')
+            raise Error('E1102')
 
         args = parser(g.args,
             ('post', int, True),
             ('parent', int, False),
             ('content', str, True))
         if not args:
-            return error('E1101')
+            raise Error('E1101')
 
         try:
             post = Post[args['post']]
             parent = None if not args.get('parent', None) else Comment[args['parent']]
         except (orm.core.ObjectNotFound, KeyError):
-            return error('E1101')
+            raise Error('E1101')
 
         if parent:
             if parent.post != post:
-                return error('E1101')
+                raise Error('E1101')
 
         depth = 0 if parent is None else (parent.depth + 1)
 
-        comment = Comment(post=post, parent=parent, depth=depth, content=args['content'], owner=pickle.loads(g.user))
+        content = between(args['content'], app.config['MIN_MAX']['comment_content'], 'E1072')
+        comment = Comment(post=post, parent=parent, depth=depth, content=content, owner=pickle.loads(g.user))
 
         db.commit()
 
@@ -69,16 +69,16 @@ class CommentItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             comment = Comment[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
+        if not authorized():
+            raise Error('E1102')
+
         if comment.owner != pickle.loads(g.user):
-            return error('E1021')
+            raise Error('E1021')
 
         comment.delete()
         db.commit()
@@ -88,16 +88,16 @@ class CommentItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             comment = Comment[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
+        if not authorized():
+            raise Error('E1102')
+
         if comment.owner != pickle.loads(g.user):
-            return error('E1021')
+            raise Error('E1021')
 
         # parser = RequestParser()
         # parser.add_argument('content', type=str, required=True)
@@ -105,9 +105,9 @@ class CommentItem(Resource):
         args = parser(g.args,
             ('content', str, True))
         if not args:
-            return error('E1101')
+            raise Error('E1101')
 
-        comment.content = args['content']
+        comment.content = between(args['content'], app.config['MIN_MAX']['comment_content'], 'E1072')
 
         db.commit()
 

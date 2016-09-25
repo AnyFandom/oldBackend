@@ -3,9 +3,9 @@ from flask_restful import Resource, abort, marshal
 
 from pony import orm
 
-from AF import db
+from AF import app, db
 
-from AF.utils import authorized, error, jsend, parser
+from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Fandom, Blog
 from AF.marshallers import fandom_marshaller, blog_marshaller
 
@@ -15,29 +15,34 @@ class FandomList(Resource):
     @orm.db_session
     def post(self):
         if not authorized():
-            return error('E1102')
+            raise Error('E1102')
 
         args = parser(g.args,
             ('title', str, True),
             ('description', str, False),
             ('avatar', str, False))
         if not args:
-            return error('E1101')
+            raise Error('E1101')
 
-        fandom = Fandom(title=args['title'])
+        title = between(args['title'], app.config['MIN_MAX']['fandom_title'], 'E1042')
+        fandom = Fandom(title=title)
+
         if args.get('description', None):
-            fandom.description = args['description']
+            fandom.description = between(args['description'], app.config['MIN_MAX']['fandom_description'], 'E1043')
         if args.get('avatar', None):
             fandom.avatar = args['avatar']
 
-        db.commit()
+        try:
+            db.commit()
+        except orm.core.TransactionIntegrityError:
+            raise Error('E1041')
 
         return 'success', {'Location': url_for('fandomitem', id=fandom.id)}, 201
 
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'fandoms': marshal(list(Fandom.select()[:]), fandom_marshaller)}
+        return 'success', {'fandoms': marshal(list(Fandom.select()), fandom_marshaller)}
 
 
 class FandomItem(Resource):
@@ -52,13 +57,13 @@ class FandomItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             fandom = Fandom[id]
         except orm.core.ObjectNotFound:
             abort(404)
+
+        if not authorized():
+            raise Error('E1102')
 
         fandom.delete()
         db.commit()
@@ -68,13 +73,13 @@ class FandomItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             fandom = Fandom[id]
         except orm.code.ObjectNotFound:
             return abort(404)
+
+        if not authorized():
+            raise Error('E1102')
 
         args = parser(g.args,
             ('title', str, False),
@@ -82,11 +87,11 @@ class FandomItem(Resource):
             ('avatar', str, False))
 
         if args.get('title'):
-            fandom.title = args['title']
+            fandom.title = between(args['title'], app.config['MIN_MAX']['fandom_title'], 'E1042')
         if args.get('description'):
-            fandom.description = args['description']
+            fandom.description = between(args['description'], app.config['MIN_MAX']['fandom_description'], 'E1043')
         if args.get('avatar'):
-            fandom.description = args['avatar']
+            fandom.avatar = args['avatar']
 
         db.commit()
 

@@ -5,9 +5,9 @@ from flask_restful import Resource, abort, marshal
 
 from pony import orm
 
-from AF import db
+from AF import app, db
 
-from AF.utils import authorized, error, jsend, parser
+from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Fandom, Blog, Post
 from AF.marshallers import blog_marshaller, post_marshaller
 
@@ -17,7 +17,7 @@ class BlogList(Resource):
     @orm.db_session
     def post(self):
         if not authorized():
-            return error('E1102')
+            raise Error('E1102')
 
         args = parser(g.args,
             ('title', str, True),
@@ -25,16 +25,20 @@ class BlogList(Resource):
             ('avatar', str, False),
             ('fandom', int, True))
         if not args:
-            return error('E1101')
+            raise Error('E1101')
+
+        # TODO: Сделать проверку на уникальность блога в фандоме
 
         try:
             fandom = Fandom[args['fandom']]
         except orm.code.ObjectNotFound:
-            return error('E1101')
+            raise Error('E1101')
 
-        blog = Blog(title=args['title'], fandom=fandom, owner=pickle.loads(g.user))
+        title = between(args['title'], app.config['MIN_MAX']['blog_title'], 'E1052')
+        blog = Blog(title=title, fandom=fandom, owner=pickle.loads(g.user))
+
         if args.get('description', None):
-            blog.description = args['description']
+            blog.description = between(args['description'], app.config['MIN_MAX']['blog_description'], 'E1053')
         if args.get('avatar', None):
             blog.avatar = args['avatar']
 
@@ -60,16 +64,16 @@ class BlogItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             blog = Blog[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
+        if not authorized():
+            raise Error('E1102')
+
         if blog.owner != pickle.loads(g.user):
-            return error('E1101')
+            raise Error('E1101')
 
         blog.delete()
         db.commit()
@@ -79,13 +83,16 @@ class BlogItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             blog = Blog[id]
         except orm.code.ObjectNotFound:
             return abort(404)
+
+        if not authorized():
+            raise Error('E1102')
+
+        if blog.owner != pickle.loads(g.user):
+            raise Error('E1101')
 
         args = parser(g.args,
             ('title', str, False),
@@ -93,11 +100,11 @@ class BlogItem(Resource):
             ('avatar', str, False))
 
         if args.get('title'):
-            blog.title = args['title']
+            blog.title = between(args['title'], app.config['MIN_MAX']['blog_title'], 'E1052')
         if args.get('description'):
-            blog.description = args['description']
+            blog.description = between(args['description'], app.config['MIN_MAX']['blog_description'], 'E1053')
         if args.get('avatar'):
-            blog.description = args['avatar']
+            blog.avatar = args['avatar']
 
         db.commit()
 

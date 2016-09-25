@@ -1,14 +1,13 @@
 import pickle
-from datetime import datetime
 
 from flask import g, url_for
 from flask_restful import Resource, abort, marshal
 
 from pony import orm
 
-from AF import db
+from AF import app, db
 
-from AF.utils import authorized, error, jsend, parser
+from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Blog, Post, Comment
 from AF.marshallers import post_marshaller, comment_marshaller
 
@@ -18,21 +17,23 @@ class PostList(Resource):
     @orm.db_session
     def post(self):
         if not authorized():
-            return error('E1102')
+            raise Error('E1102')
 
         args = parser(g.args,
             ('title', str, True),
             ('content', str, True),
             ('blog', int, True))
         if not args:
-            return error('E1101')
+            raise Error('E1101')
 
         try:
             blog = Blog[args['blog']]
         except orm.core.ObjectNotFound:
-            return error('E1101')
+            raise Error('E1101')
 
-        post = Post(title=args['title'], content=args['content'], owner=pickle.loads(g.user), blog=blog)
+        title = between(args['title'], app.config['MIN_MAX']['post_title'], 'E1061')
+        content = between(args['content'], app.config['MIN_MAX']['post_content'], 'E1062')
+        post = Post(title=title, content=content, owner=pickle.loads(g.user), blog=blog)
 
         db.commit()
 
@@ -56,16 +57,16 @@ class PostItem(Resource):
     @jsend
     @orm.db_session
     def delete(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
+        if not authorized():
+            raise Error('E1102')
+
         if post.owner != pickle.loads(g.user):
-            return error('E1011')
+            raise Error('E1011')
 
         post.delete()
         db.commit()
@@ -75,25 +76,25 @@ class PostItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        if not authorized():
-            return error('E1102')
-
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
             abort(404)
 
+        if not authorized():
+            raise Error('E1102')
+
         if post.owner != pickle.loads(g.user):
-            return error('E1011')
+            raise Error('E1011')
 
         args = parser(g.args,
             ('title', str, False),
             ('content', str, False))
 
         if args.get('title'):
-            post.title = args['title']
+            post.title = between(args['title'], app.config['MIN_MAX']['post_title'], 'E1061')
         if args.get('content'):
-            post.content = args['content']
+            post.content = between(args['content'], app.config['MIN_MAX']['post_content'], 'E1062')
 
         db.commit()
 
@@ -104,13 +105,13 @@ class PostCommentList(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        args = parser(g.args,
-            ('threaded', int, False))
-
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
             abort(404)
+
+        args = parser(g.args,
+            ('threaded', int, False))
 
         if args.get('threaded', None):
             def recursion(comments):
