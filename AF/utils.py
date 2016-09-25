@@ -66,7 +66,6 @@ def parser(dictionary, *args):  # (name, type, required)
     resp = {}
     for arg in args:
         item = dictionary.get(arg[0])
-        print(arg[1], arg[2], not len(xstr(item)))
         if arg[1] == int and isnum(item) is True:  # if argument should be int and it is, but in string
             resp[arg[0]] = int(item)
         elif arg[2] and (not len(xstr(item)) or not isinstance(item, arg[1])):  # if required and (no such item or item is wrong type)
