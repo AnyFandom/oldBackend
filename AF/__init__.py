@@ -14,7 +14,10 @@ from flask_socketio import SocketIO, join_room
 class MyApi(Api):
     def handle_error(self, e):
         code = getattr(e, 'code', 500)
-        return self.make_response({'status': 'error', 'message': json.loads(str(super(MyApi, self).handle_error(e).data, 'utf8'))['message']}, code)
+        if code == 405:  # Больше некуда это пихать чтоб работало
+            return handle_error(Error('E1202'))
+        else:
+            return self.make_response({'status': 'error', 'message': json.loads(str(super(MyApi, self).handle_error(e).data, 'utf8'))['message']}, code)
 
 app = Flask(__name__)
 api = MyApi(app)
@@ -92,6 +95,8 @@ def before_request():
     except TypeError:
         g.args = request.values.to_dict()
 
+    g.args = {**g.args, **request.files}
+
     args = parser(g.args,
         ('token', str, False))
 
@@ -105,12 +110,20 @@ def before_request():
 
 @app.errorhandler(404)
 def url_not_found(e):
-    return jsonify({'status': 'error', 'message': 'The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.'}), 404
+    # return jsonify({'status': 'error', 'message': 'The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.'}), 404
+    return handle_error(Error('E1201'))  # Не используем raise потому что он не обрабатывается handle_error автоматически, поэтому вызываем его вручную
 
 
-@app.errorhandler(405)
-def method_not_allowed(e):
-    return jsonify({'status': 'error', 'message': 'The method is not allowed for the requested URL.'}), 405
+# TODO: Надо убрать
+# @app.errorhandler(405)
+# def method_not_allowed(e):
+#     # return jsonify({'status': 'error', 'message': 'The method is not allowed for the requested URL.'}), 405
+#     return handle_error(Error('E1202'))
+
+
+@app.errorhandler(413)
+def payload_too_large(e):
+    return handle_error(Error('E1203'))
 
 
 @app.errorhandler(Error)

@@ -8,24 +8,24 @@ from AF import app
 class Error(Exception):
     errors = {
         # AUTH
-        'E1001': ['Token is invalid.', 403],
+        'E1001': ['Specified authentication token is invalid.', 403],
         'E1002': ['Incorrect username or password.', 403],
-        'E1003': ['You need to enter the token to access this page', 403],
+        'E1003': ['You need to enter the authentication token to access this page', 403],
         # POSTS
         'E1011': ['You are not the author of this post.', 403],
         # COMMENTS
         'E1021': ['You are not the author of the comment.', 403],
         # USERS
-        'E1031': ['Username must be unique.', 400],
+        'E1031': ['Username must be unique.', 409],
         'E1032': ['Username must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['username']), 400],
         'E1033': ['Password must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['password']), 400],
         'E1034': ['User description must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['user_description']), 400],
         # FANDOMS
-        'E1041': ['Fandom title must be unique.', 400],
+        'E1041': ['Fandom title must be unique.', 409],
         'E1042': ['Fandom title must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['fandom_title']), 400],
         'E1043': ['Fandom description must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['fandom_description']), 400],
         # BLOGS
-        'E1051': ['Blog title must be unique in this fandom', 400],
+        'E1051': ['Blog title must be unique in this fandom', 409],
         'E1052': ['Blog title must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['blog_title']), 400],
         'E1053': ['Blog description must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['blog_description']), 400],
         # POSTS
@@ -36,7 +36,10 @@ class Error(Exception):
         'E1072': ['Comment content must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['comment_content']), 400],
         # OTHER
         'E1101': ['One or multiple required parameters were not transferred or invalid.', 400],
-        'E1102': ['You don\'t have sufficent permissions to access this page.', 403]
+        'E1102': ['Your account doesn\'t have sufficent permissions to execute this operation.', 403],
+        'E1201': ['The specified resource doesn\'t exist.', 404],
+        'E1202': ['The resource doesn\'t support the specified HTTP method.', 405],
+        'E1203': ['The size of the request body exceeds the maximum size permitted.', 413]
     }
 
     def __init__(self, error_code):
