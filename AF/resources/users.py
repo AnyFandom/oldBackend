@@ -1,7 +1,7 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, abort, marshal
+from flask_restful import Resource, marshal
 
 from pony import orm
 
@@ -63,7 +63,7 @@ class UserItem(Resource):
 
                 return 'success', {'user': marshal(user, user_marshaller)}  # if id is not None then /users/id else /users/profile
             except (orm.core.ObjectNotFound, ValueError):
-                abort(404)
+                raise Error('E1035')
 
 
 class UserPostList(Resource):
@@ -83,7 +83,7 @@ class UserPostList(Resource):
 
                 return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == user)), post_marshaller)}
             except (orm.core.ObjectNotFound, orm.core.ExprEvalError, ValueError):
-                abort(404)
+                raise Error('E1035')
 
 
 class UserCommentList(Resource):
@@ -103,4 +103,4 @@ class UserCommentList(Resource):
 
                 return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == user)), comment_marshaller)}
             except (orm.core.ObjectNotFound, orm.core.ExprEvalError, ValueError):
-                abort(404)
+                raise Error('E1035')

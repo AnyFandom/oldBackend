@@ -1,7 +1,7 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, abort, marshal
+from flask_restful import Resource, marshal
 
 from pony import orm
 
@@ -52,7 +52,7 @@ class PostItem(Resource):
         try:
             return 'success', {'post': marshal(Post[id], post_marshaller)}
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1063')
 
     @jsend
     @orm.db_session
@@ -60,7 +60,7 @@ class PostItem(Resource):
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1063')
 
         if not authorized():
             raise Error('E1102')
@@ -79,7 +79,7 @@ class PostItem(Resource):
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1063')
 
         if not authorized():
             raise Error('E1102')
@@ -108,7 +108,7 @@ class PostCommentList(Resource):
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1063')
 
         args = parser(g.args,
             ('threaded', int, False))

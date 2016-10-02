@@ -1,5 +1,5 @@
 from flask import g, url_for
-from flask_restful import Resource, abort, marshal
+from flask_restful import Resource, marshal
 
 from pony import orm
 
@@ -52,7 +52,7 @@ class FandomItem(Resource):
         try:
             return 'success', {'fandom': marshal(Fandom[id], fandom_marshaller)}
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1044')
 
     @jsend
     @orm.db_session
@@ -60,7 +60,7 @@ class FandomItem(Resource):
         try:
             fandom = Fandom[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1044')
 
         if not authorized():
             raise Error('E1102')
@@ -76,7 +76,7 @@ class FandomItem(Resource):
         try:
             fandom = Fandom[id]
         except orm.code.ObjectNotFound:
-            return abort(404)
+            raise Error('E1044')
 
         if not authorized():
             raise Error('E1102')
@@ -105,6 +105,6 @@ class FandomBlogList(Resource):
         try:
             fandom = Fandom[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1044')
 
         return 'success', {'blogs': marshal(list(Blog.select(lambda p: p.fandom == fandom)), blog_marshaller)}

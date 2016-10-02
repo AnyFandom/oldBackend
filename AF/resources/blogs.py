@@ -1,7 +1,7 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, abort, marshal
+from flask_restful import Resource, marshal
 
 from pony import orm
 
@@ -59,7 +59,7 @@ class BlogItem(Resource):
         try:
             return 'success', {'blog': marshal(Blog[id], blog_marshaller)}
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1054')
 
     @jsend
     @orm.db_session
@@ -67,7 +67,7 @@ class BlogItem(Resource):
         try:
             blog = Blog[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1054')
 
         if not authorized():
             raise Error('E1102')
@@ -86,7 +86,7 @@ class BlogItem(Resource):
         try:
             blog = Blog[id]
         except orm.code.ObjectNotFound:
-            return abort(404)
+            return Error('E1054')
 
         if not authorized():
             raise Error('E1102')
@@ -118,6 +118,6 @@ class BlogPostList(Resource):
         try:
             blog = Blog[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            return Error('E1054')
 
         return 'success', {'posts': marshal(list(Post.select(lambda p: p.blog == blog)), post_marshaller)}

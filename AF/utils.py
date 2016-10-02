@@ -20,24 +20,29 @@ class Error(Exception):
         'E1032': ['Username must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['username']), 400],
         'E1033': ['Password must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['password']), 400],
         'E1034': ['User description must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['user_description']), 400],
+        'E1035': ['User with specified ID or username doesn\'t exists.', 404],
         # FANDOMS
         'E1041': ['Fandom title must be unique.', 409],
         'E1042': ['Fandom title must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['fandom_title']), 400],
         'E1043': ['Fandom description must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['fandom_description']), 400],
+        'E1044': ['Fandom with specified ID doesn\'t exists.', 404],
         # BLOGS
         'E1051': ['Blog title must be unique in this fandom', 409],
         'E1052': ['Blog title must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['blog_title']), 400],
         'E1053': ['Blog description must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['blog_description']), 400],
+        'E1054': ['Blog with specified ID doesn\'t exists.', 404],
         # POSTS
         'E1061': ['Post title must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['post_title']), 400],
         'E1062': ['Post content must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['post_content']), 400],
+        'E1063': ['Post with specified ID doesn\'t exists.', 404],
         # COMMENTS
         'E1071': ['Reserved', 400],  # Анти-спам
         'E1072': ['Comment content must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['comment_content']), 400],
+        'E1073': ['Comment with specified ID doesn\'t exists.', 404],
         # OTHER
         'E1101': ['One or multiple required parameters were not transferred or invalid.', 400],
         'E1102': ['Your account doesn\'t have sufficent permissions to execute this operation.', 403],
-        'E1201': ['The specified resource doesn\'t exist.', 404],
+        'E1201': ['The specified resource doesn\'t exists.', 404],
         'E1202': ['The resource doesn\'t support the specified HTTP method.', 405],
         'E1203': ['The size of the request body exceeds the maximum size permitted.', 413]
     }
