@@ -4,6 +4,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DEBUG = True
 ERROR_404_HELP = False
 
+MAX_CONTENT_LENGTH = 10 * 1024 * 1024
+
 SECRET_TOKEN_KEY = '<INSERT YOUR SECRET KEY HERE>'
 
 MIN_MAX = {

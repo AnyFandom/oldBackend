@@ -1,7 +1,7 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, abort, marshal
+from flask_restful import Resource, marshal
 
 from pony import orm
 
@@ -64,7 +64,7 @@ class CommentItem(Resource):
         try:
             return 'success', {'comment': marshal(Comment[id], comment_marshaller)}
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1073')
 
     @jsend
     @orm.db_session
@@ -72,7 +72,7 @@ class CommentItem(Resource):
         try:
             comment = Comment[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1073')
 
         if not authorized():
             raise Error('E1102')
@@ -91,7 +91,7 @@ class CommentItem(Resource):
         try:
             comment = Comment[id]
         except orm.core.ObjectNotFound:
-            abort(404)
+            raise Error('E1073')
 
         if not authorized():
             raise Error('E1102')
