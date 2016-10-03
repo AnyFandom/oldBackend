@@ -70,6 +70,21 @@ class UserItem(Resource):
         user = get_user(id, username)
         return 'success', {'user': marshal(user, user_marshaller)}
 
+    @jsend
+    @orm.db_session
+    def patch(self, id=None, username=None):
+        user = get_user(id, username)
+        args = parser(g.args,
+            ('avatar', str, False),
+            ('description', str, False))
+        if args.get('avatar'):
+            user.avatar = args['avatar']
+        if args.get('description'):
+            user.description = args['description']
+        db.commit()
+        return 'success', None, 202
+
+
 
 class UserPostList(Resource):
     @jsend
