@@ -22,5 +22,5 @@ def send_notification(title, body, id):
     try:
         socketio.emit('notification', {'title': title, 'options': {'body': body}}, room=users[id][0])
         print('Notification Out!')
-    except ValueError:
+    except KeyError:
         pass

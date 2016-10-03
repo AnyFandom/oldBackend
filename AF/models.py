@@ -45,6 +45,7 @@ class Post(db.Entity):
 
     title = orm.Required(str)
     content = orm.Required(str)
+    preview_image = orm.Optional(str, default='https://www.betaseries.com/images/fonds/original/3086_1410380644.jpg')
     owner = orm.Required(User)
     comments = orm.Set('Comment')
     date = orm.Optional(datetime, default=datetime.utcnow())

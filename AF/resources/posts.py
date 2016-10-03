@@ -22,6 +22,7 @@ class PostList(Resource):
         args = parser(g.args,
             ('title', str, True),
             ('content', str, True),
+            ('preview', str, False),
             ('blog', int, True))
         if not args:
             raise Error('E1101')
@@ -33,7 +34,7 @@ class PostList(Resource):
 
         title = between(args['title'], app.config['MIN_MAX']['post_title'], 'E1061')
         content = between(args['content'], app.config['MIN_MAX']['post_content'], 'E1062')
-        post = Post(title=title, content=content, owner=pickle.loads(g.user), blog=blog)
+        post = Post(title=title, content=content, owner=pickle.loads(g.user), blog=blog, preview_image=args.get('preview', 'https://www.betaseries.com/images/fonds/original/3086_1410380644.jpg'))
 
         db.commit()
 
@@ -42,7 +43,7 @@ class PostList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'posts': marshal(list(Post.select()[:]), post_marshaller)}
+        return 'success', {'posts': marshal(list(Post.select().order_by(Post.id.desc())[:]), post_marshaller)}
 
 
 class PostItem(Resource):

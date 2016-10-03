@@ -9,6 +9,23 @@ class UserField(fields.Raw):
             'avatar': value.avatar
         }
 
+class FandomField(fields.Raw):
+    def format(self, value):
+        return {
+            'id': value.id,
+            'title': value.title,
+            'avatar': value.avatar
+        }
+
+class BlogField(fields.Raw):
+    def format(self, value):
+        return {
+            'id': value.id,
+            'title': value.title,
+            'avatar': value.avatar,
+            'fandom': FandomField.format(None, value.fandom)
+        }
+
 
 class IdField(fields.Raw):
     def format(self, value):
@@ -30,10 +47,11 @@ post_marshaller = {
     'id': fields.Integer,
     'title': fields.String,
     'content': fields.String,
+    'preview_image': fields.String,
     'owner': UserField,
     'comment_count': fields.Integer,
     'date': fields.DateTime(dt_format='iso8601'),
-    'blog': IdField
+    'blog': BlogField
 }
 
 comment_marshaller = {
@@ -58,6 +76,6 @@ blog_marshaller = {
     'title': fields.String,
     'description': fields.String,
     'avatar': fields.String,
-    'fandom': IdField,
+    'fandom': FandomField,
     'owner': UserField
 }

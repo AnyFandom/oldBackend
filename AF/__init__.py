@@ -38,6 +38,7 @@ from AF.resources.posts import PostList, PostItem, PostCommentList
 from AF.resources.comments import CommentList, CommentItem
 from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
+from AF.utils import jsend
 
 from AF.models import User, Fandom, Blog, Post, Comment
 from AF.utils import Error, parser
@@ -74,14 +75,6 @@ def before_first_request():
     namespace = argparser.parse_args(sys.argv[1:])
     db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
     db.generate_mapping(create_tables=True)
-    if namespace.testing == '1':
-        with orm.db_session:
-            u = User(username='ADMEN', password='123454321')
-            f = Fandom(title='Test fandom')
-            b = Blog(title='Test blog', fandom=f, owner=u)
-            p = Post(title='Test post', content='Lorem ipsum dolor', owner=u, blog=b)
-            c = Comment(content='Test comment', depth=0, parent=None, post=p, owner=u)
-            db.commit()
 
 
 @app.before_request
@@ -91,6 +84,7 @@ def before_request():
         g.args = {**request.values.to_dict(), **request.get_json()}
     except TypeError:
         g.args = request.values.to_dict()
+    print(g.args)
 
     args = parser(g.args,
         ('token', str, False))
@@ -143,3 +137,15 @@ def join(room):
 def test_sock():
     AF.socket_utils.hi_everyone()
     return '', 200
+
+@app.route('/env')
+@jsend
+@orm.db_session
+def init_env():
+    u = User(username='ADMEN', password='123454321')
+    f = Fandom(title='Test fandom')
+    b = Blog(title='Test blog', fandom=f, owner=u)
+    p = Post(title='Test post', content='Lorem ipsum dolor', owner=u, blog=b)
+    c = Comment(content='Test comment', depth=0, parent=None, post=p, owner=u)
+    db.commit()
+    return 'success', {'status': 'OK'}
