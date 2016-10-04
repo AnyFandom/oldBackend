@@ -20,7 +20,7 @@ def send_update_comments_request(post_id):
 
 def send_notification(title, body, id):
     try:
-        socketio.emit('notification', {'title': title, 'options': {'body': body}}, room=users[id][0])
+        socketio.emit('notification', {'options': {'title': title, 'body': body}}, room=users[id][0])
         print('Notification Out!')
     except KeyError:
         pass

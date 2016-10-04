@@ -48,7 +48,7 @@ class CommentList(Resource):
         send_update_comments_request(post.id)
         if parent:
             print('Notification!')
-            send_notification('New answer', 'New answer to you!' + comment.content, comment.parent.owner.id)
+            send_notification('New answer', 'New answer! ' + comment.content, comment.parent.owner.id)
         return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
 
     @jsend

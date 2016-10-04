@@ -129,6 +129,12 @@ def handle_error(error):
 @orm.db_session
 def handle_init(token):
     print('NOW')
+    if not token:
+        if not users.get('guest'):
+            users['guest'] = []
+        users['guest'].append(request.sid)
+        socketio.emit('my response', users)
+        return
     user = User.check_auth_token(token)
     if not user:
         raise Error('E1001')
@@ -138,6 +144,12 @@ def handle_init(token):
     else:
         users[user.id] = [request.sid]
     socketio.emit('my response', users)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    for i in list(users.keys()):
+        if request.sid in users[i]:
+            users[i].pop(users[i].index(request.sid))
 
 
 @socketio.on('join')
