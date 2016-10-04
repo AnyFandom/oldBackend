@@ -7,7 +7,7 @@ from pony import orm
 
 from AF import app, db
 
-from AF.utils import jsend, Error, parser, between
+from AF.utils import jsend, Error, parser, between, authorized
 from AF.models import Comment, Post, User
 from AF.marshallers import user_marshaller, post_marshaller, comment_marshaller
 
@@ -72,18 +72,50 @@ class UserItem(Resource):
 
     @jsend
     @orm.db_session
+    def delete(self, id=None, username=None):
+        user = get_user(id, username)
+
+        if not authorized():
+            raise Error('E1102')
+
+        if user != pickle.loads(g.user):
+            raise Error('E1102')
+
+        user.delete()
+        db.commit()
+
+        return 'success', None, 200
+
+    @jsend
+    @orm.db_session
     def patch(self, id=None, username=None):
         user = get_user(id, username)
+
+        if not authorized():
+            raise Error('E1102')
+
+        if user != pickle.loads(g.user):
+            raise Error('E1102')
+
         args = parser(g.args,
+            ('password', str, False),
+            ('new_password', str, False)
             ('avatar', str, False),
             ('description', str, False))
-        if args.get('avatar'):
-            user.avatar = args['avatar']
-        if args.get('description'):
-            user.description = args['description']
-        db.commit()
-        return 'success', None, 202
 
+        if args.get('new_password'):
+            if user.check_password(args.get('password')):
+                user.password = between(args['new_password'], app.config['MIN_MAX']['password'], 'E1033')
+            else:
+                raise Error('E1036')
+        if args.get('description'):
+            user.description = between(args['description'], app.config['MIN_MAX']['user_description'], 'E1034')
+        if args.get('avatar'):
+            user.password = args['avatar']
+
+        db.commit()
+
+        return 'success', None, 201
 
 
 class UserPostList(Resource):

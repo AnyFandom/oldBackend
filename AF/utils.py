@@ -21,6 +21,7 @@ class Error(Exception):
         'E1033': ['Password must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['password']), 400],
         'E1034': ['User description must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['user_description']), 400],
         'E1035': ['User with specified ID or username doesn\'t exists.', 404],
+        'E1036': ['To change password you need to enter current one.', 403],
         # FANDOMS
         'E1041': ['Fandom title must be unique.', 409],
         'E1042': ['Fandom title must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['fandom_title']), 400],
@@ -41,7 +42,7 @@ class Error(Exception):
         'E1073': ['Comment with specified ID doesn\'t exists.', 404],
         # OTHER
         'E1101': ['One or multiple required parameters were not transferred or invalid.', 400],
-        'E1102': ['Your account doesn\'t have sufficent permissions to execute this operation.', 403],
+        'E1102': ['You don\'t have sufficent permissions to execute this operation.', 403],
         'E1201': ['The specified resource doesn\'t exists.', 404],
         'E1202': ['The resource doesn\'t support the specified HTTP method.', 405],
         'E1203': ['The size of the request body exceeds the maximum size permitted.', 413]

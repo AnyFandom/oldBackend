@@ -99,7 +99,7 @@ class PostItem(Resource):
 
         db.commit()
 
-        return 'success', None, 202
+        return 'success', None, 200
 
 
 class PostCommentList(Resource):
