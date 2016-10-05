@@ -39,7 +39,7 @@ from AF.resources.token import Token
 from AF.resources.users import UserList, UserItem, UserPostList, UserCommentList
 from AF.resources.posts import PostList, PostItem, PostCommentList
 from AF.resources.comments import CommentList, CommentItem
-from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList
+from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList, FandomPostList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
 from AF.utils import jsend
 
@@ -58,6 +58,7 @@ api.add_resource(UserCommentList, '/users/current/comments', '/users/id/<int:id>
 api.add_resource(FandomList, '/fandoms')
 api.add_resource(FandomItem, '/fandoms/<int:id>')
 api.add_resource(FandomBlogList, '/fandoms/<int:id>/blogs')
+api.add_resource(FandomPostList, '/fandoms/<int:id>/posts')
 ###
 api.add_resource(BlogList, '/blogs')
 api.add_resource(BlogItem, '/blogs/<int:id>')

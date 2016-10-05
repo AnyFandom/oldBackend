@@ -6,8 +6,8 @@ from pony import orm
 from AF import app, db
 
 from AF.utils import authorized, Error, jsend, parser, between
-from AF.models import Fandom, Blog
-from AF.marshallers import fandom_marshaller, blog_marshaller
+from AF.models import Fandom, Blog, Post
+from AF.marshallers import fandom_marshaller, blog_marshaller, post_marshaller
 
 
 class FandomList(Resource):
@@ -108,3 +108,15 @@ class FandomBlogList(Resource):
             raise Error('E1044')
 
         return 'success', {'blogs': marshal(list(Blog.select(lambda p: p.fandom == fandom)), blog_marshaller)}
+
+
+class FandomPostList(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            fandom = Fandom[id]
+        except orm.core.ObjectNotFound:
+            raise Error('E1044')
+        fandom_blogs = list(Blog.select(lambda p: p.fandom == fandom))
+        return 'success', {'posts': marshal(list(Post.select(lambda p: p.blog in fandom_blogs)), post_marshaller)}
