@@ -146,6 +146,7 @@ def handle_init(token):
         users[user.id] = [request.sid]
     socketio.emit('my response', users)
 
+
 @socketio.on('disconnect')
 def handle_disconnect():
     for i in list(users.keys()):
@@ -163,6 +164,7 @@ def join(room):
 def test_sock():
     AF.socket_utils.hi_everyone()
     return '', 200
+
 
 @app.route('/env')
 @jsend

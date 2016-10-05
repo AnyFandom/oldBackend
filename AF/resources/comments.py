@@ -78,7 +78,7 @@ class CommentItem(Resource):
             raise Error('E1102')
 
         if comment.owner != pickle.loads(g.user):
-            raise Error('E1021')
+            raise Error('E1102')
 
         comment.delete()
         db.commit()
@@ -97,7 +97,7 @@ class CommentItem(Resource):
             raise Error('E1102')
 
         if comment.owner != pickle.loads(g.user):
-            raise Error('E1021')
+            raise Error('E1102')
 
         # parser = RequestParser()
         # parser.add_argument('content', type=str, required=True)
