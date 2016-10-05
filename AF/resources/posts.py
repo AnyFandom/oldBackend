@@ -67,7 +67,7 @@ class PostItem(Resource):
             raise Error('E1102')
 
         if post.owner != pickle.loads(g.user):
-            raise Error('E1011')
+            raise Error('E1102')
 
         post.delete()
         db.commit()
@@ -86,7 +86,7 @@ class PostItem(Resource):
             raise Error('E1102')
 
         if post.owner != pickle.loads(g.user):
-            raise Error('E1011')
+            raise Error('E1102')
 
         args = parser(g.args,
             ('title', str, False),

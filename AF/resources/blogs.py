@@ -73,7 +73,7 @@ class BlogItem(Resource):
             raise Error('E1102')
 
         if blog.owner != pickle.loads(g.user):
-            raise Error('E1101')
+            raise Error('E1102')
 
         blog.delete()
         db.commit()
@@ -92,7 +92,7 @@ class BlogItem(Resource):
             raise Error('E1102')
 
         if blog.owner != pickle.loads(g.user):
-            raise Error('E1101')
+            raise Error('E1102')
 
         args = parser(g.args,
             ('title', str, False),
