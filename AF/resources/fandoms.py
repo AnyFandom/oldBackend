@@ -8,6 +8,7 @@ from AF import app, db
 from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Fandom, Blog, Post
 from AF.marshallers import fandom_marshaller, blog_marshaller, post_marshaller
+from AF.socket_utils import send_update
 
 
 class FandomList(Resource):
@@ -34,6 +35,7 @@ class FandomList(Resource):
 
         try:
             db.commit()
+            send_update('fandom-list')
         except orm.core.TransactionIntegrityError:
             raise Error('E1041')
 

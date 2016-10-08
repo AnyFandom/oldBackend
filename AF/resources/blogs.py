@@ -10,6 +10,7 @@ from AF import app, db
 from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Fandom, Blog, Post
 from AF.marshallers import blog_marshaller, post_marshaller
+from AF.socket_utils import send_update
 
 
 class BlogList(Resource):
@@ -31,7 +32,7 @@ class BlogList(Resource):
 
         try:
             fandom = Fandom[args['fandom']]
-        except orm.code.ObjectNotFound:
+        except orm.core.ObjectNotFound:
             raise Error('E1101')
 
         title = between(args['title'], app.config['MIN_MAX']['blog_title'], 'E1052')
@@ -43,6 +44,7 @@ class BlogList(Resource):
             blog.avatar = args['avatar']
 
         db.commit()
+        send_update('blog-list', fandom.id)
 
         return 'success', {'Location': url_for('blogitem', id=blog.id)}, 201
 

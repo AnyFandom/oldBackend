@@ -11,7 +11,7 @@ from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Post, Comment
 from AF.marshallers import comment_marshaller
 
-from AF.socket_utils import send_update_comments_request, send_notification
+from AF.socket_utils import send_update, send_notification
 
 
 class CommentList(Resource):
@@ -45,7 +45,7 @@ class CommentList(Resource):
 
         db.commit()
 
-        send_update_comments_request(post.id)
+        send_update('comments', post.id)
         if parent:
             print('Notification!')
             send_notification('New answer', 'New answer! ' + comment.content, comment.parent.owner.id)

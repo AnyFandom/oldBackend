@@ -14,8 +14,9 @@ def hi_user(id):
         pass
 
 
-def send_update_comments_request(post_id):
-    socketio.emit('update_comments_request', room='post-' + str(post_id))
+def send_update(type, id=None):
+    socketio.emit('update_request', {'type': type, 'id': id})
+
 
 
 def send_notification(title, body, id):

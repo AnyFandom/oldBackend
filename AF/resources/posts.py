@@ -10,6 +10,7 @@ from AF import app, db
 from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Blog, Post, Comment
 from AF.marshallers import post_marshaller, comment_marshaller
+from AF.socket_utils import send_update
 
 
 class PostList(Resource):
@@ -37,6 +38,7 @@ class PostList(Resource):
         post = Post(title=title, content=content, owner=pickle.loads(g.user), blog=blog, preview_image=args.get('preview', 'https://www.betaseries.com/images/fonds/original/3086_1410380644.jpg'))
 
         db.commit()
+        send_update('post-list')
 
         return 'success', {'Location': url_for('postitem', id=post.id)}, 201
 

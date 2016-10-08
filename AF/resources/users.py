@@ -10,6 +10,7 @@ from AF import app, db
 from AF.utils import jsend, Error, parser, between, authorized
 from AF.models import Comment, Post, User
 from AF.marshallers import user_marshaller, post_marshaller, comment_marshaller
+from AF.socket_utils import send_update
 
 
 def get_user(id, username):
@@ -52,6 +53,7 @@ class UserList(Resource):
 
         try:
             db.commit()
+            send_update('user-list')
         except orm.core.TransactionIntegrityError:
             raise Error('E1031')
 
