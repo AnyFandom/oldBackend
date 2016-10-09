@@ -1,8 +1,9 @@
-requests==2.11.1
-Flask==0.11.1
-flask_cors==3.0.2
-flask_restful==0.3.5
-flask_socketio==2.7.1
-PyJWT==1.4.2
-pony==0.6.6
-termcolor==1.1.0
+requests
+Flask
+flask_cors
+flask_restful
+flask_socketio
+PyJWT
+pony
+termcolor
+eventlet
