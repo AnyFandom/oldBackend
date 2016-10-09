@@ -62,7 +62,7 @@ class UserList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'users': marshal(list(User.select()[:]), user_marshaller)}
+        return 'success', {'users': marshal(list(User.select()), user_marshaller)}
 
 
 class UserItem(Resource):

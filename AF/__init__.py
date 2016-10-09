@@ -88,7 +88,6 @@ def before_request():
         g.args = {**request.values.to_dict(), **request.get_json()}
     except TypeError:
         g.args = request.values.to_dict()
-    print(g.args)
 
     g.args = {**g.args, **request.files}
 

@@ -54,7 +54,7 @@ class CommentList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'comments': marshal(list(Comment.select()[:]), comment_marshaller)}
+        return 'success', {'comments': marshal(list(Comment.select()), comment_marshaller)}
 
 
 class CommentItem(Resource):

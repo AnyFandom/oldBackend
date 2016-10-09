@@ -51,7 +51,7 @@ class BlogList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'blogs': marshal(list(Blog.select()[:]), blog_marshaller)}
+        return 'success', {'blogs': marshal(list(Blog.select()), blog_marshaller)}
 
 
 class BlogItem(Resource):
