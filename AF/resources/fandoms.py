@@ -69,6 +69,8 @@ class FandomItem(Resource):
 
         fandom.delete()
         db.commit()
+        send_update('fandom-list')
+        send_update('fandom', fandom.id)
 
         return 'success', None, 201
 
@@ -96,6 +98,8 @@ class FandomItem(Resource):
             fandom.avatar = args['avatar']
 
         db.commit()
+        send_update('fandom-list')
+        send_update('fandom', fandom.id)
 
         return 'success', None, 200
 

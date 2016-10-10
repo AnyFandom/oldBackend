@@ -73,6 +73,8 @@ class PostItem(Resource):
 
         post.delete()
         db.commit()
+        send_update('post-list')
+        send_update('post', post.id)
 
         return 'success', None, 201
 
@@ -100,6 +102,8 @@ class PostItem(Resource):
             post.content = between(args['content'], app.config['MIN_MAX']['post_content'], 'E1062')
 
         db.commit()
+        send_update('post-list')
+        send_update('post', post.id)
 
         return 'success', None, 200
 

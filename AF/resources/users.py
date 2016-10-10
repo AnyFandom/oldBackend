@@ -85,6 +85,8 @@ class UserItem(Resource):
 
         user.delete()
         db.commit()
+        send_update('user-list')
+        send_update('user', user.id)
 
         return 'success', None, 200
 
@@ -116,6 +118,8 @@ class UserItem(Resource):
             user.password = args['avatar']
 
         db.commit()
+        send_update('user-list')
+        send_update('user', user.id)
 
         return 'success', None, 201
 

@@ -71,14 +71,22 @@ api.add_resource(PostCommentList, '/posts/<int:id>/comments')
 api.add_resource(CommentList, '/comments')
 api.add_resource(CommentItem, '/comments/<int:id>')
 
+def init():
+    try:
+        argparser = argparse.ArgumentParser()
+        argparser.add_argument('-t', '--testing', default='0')
+        namespace = argparser.parse_args(sys.argv[1:])
+        db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
+        db.generate_mapping(create_tables=True)
+    except TypeError:
+        pass
+    finally:
+        g.ready = True
 
 @app.before_first_request
 def before_first_request():
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument('-t', '--testing', default='0')
-    namespace = argparser.parse_args(sys.argv[1:])
-    db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
-    db.generate_mapping(create_tables=True)
+    if not getattr(g, 'ready', False):
+        init()
 
 
 @app.before_request
@@ -124,6 +132,9 @@ def payload_too_large(e):
 def handle_error(error):
     return jsonify(error.to_dict()), error.code
 
+@socketio.on('connect')
+def socket_connect():
+    before_first_request()
 
 @socketio.on('init')
 @orm.db_session
