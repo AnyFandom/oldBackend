@@ -45,7 +45,7 @@ class CommentList(Resource):
 
         db.commit()
 
-        send_update('comments', post.id)
+        send_update('comment-list', post.id)
         if parent:
             print('Notification!')
             send_notification('New answer', 'New answer! ' + comment.content, comment.parent.owner.id)
@@ -82,6 +82,8 @@ class CommentItem(Resource):
 
         comment.delete()
         db.commit()
+        send_update('comment-list', comment.post.id)
+        send_update('comment', comment.id)
 
         return 'success', None, 201
 
@@ -110,5 +112,7 @@ class CommentItem(Resource):
         comment.content = between(args['content'], app.config['MIN_MAX']['comment_content'], 'E1072')
 
         db.commit()
+        send_update('comment-list', comment.post.id)
+        send_update('comment', comment.id)
 
         return 'success', None, 200

@@ -79,6 +79,7 @@ class BlogItem(Resource):
 
         blog.delete()
         db.commit()
+        send_update('blog-list', blog.fandom.id)
 
         return 'success', None, 201
 
@@ -109,6 +110,8 @@ class BlogItem(Resource):
             blog.avatar = args['avatar']
 
         db.commit()
+        send_update('blog-list', blog.fandom.id)
+        send_update('blog', blog.id)
 
         return 'success', None, 200
 
