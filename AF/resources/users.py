@@ -62,7 +62,7 @@ class UserList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'users': marshal(list(User.select()), user_marshaller)}
+        return 'success', {'users': marshal(list(User.select()[:]), user_marshaller)}
 
 
 class UserItem(Resource):
@@ -80,8 +80,8 @@ class UserItem(Resource):
         if not authorized():
             raise Error('E1102')
 
-        if user != pickle.loads(g.user):
-            raise Error('E1102')
+        #if user != pickle.loads(g.user):
+        #    raise Error('E1102')
 
         user.delete()
         db.commit()
@@ -103,7 +103,7 @@ class UserItem(Resource):
 
         args = parser(g.args,
             ('password', str, False),
-            ('new_password', str, False)
+            ('new_password', str, False),
             ('avatar', str, False),
             ('description', str, False))
 
@@ -115,7 +115,7 @@ class UserItem(Resource):
         if args.get('description'):
             user.description = between(args['description'], app.config['MIN_MAX']['user_description'], 'E1034')
         if args.get('avatar'):
-            user.password = args['avatar']
+            user.avatar = args['avatar']
 
         db.commit()
         send_update('user-list')
