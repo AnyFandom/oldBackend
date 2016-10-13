@@ -19,6 +19,7 @@ class User(db.Entity):
     posts = orm.Set('Post')
     comments = orm.Set('Comment')
     blogs = orm.Set('Blog')
+    lastComments = orm.Set('LastComment')
 
     def check_password(self, password):
         return self.password == password
@@ -50,6 +51,7 @@ class Post(db.Entity):
     comments = orm.Set('Comment')
     date = orm.Optional(datetime, default=datetime.utcnow())
     blog = orm.Required('Blog')
+    lastComments = orm.Set('LastComment')
 
 
 class Comment(db.Entity):
@@ -78,3 +80,8 @@ class Blog(db.Entity):
     fandom = orm.Required(Fandom)
     posts = orm.Set(Post)
     owner = orm.Required(User)
+
+class LastComment(db.Entity):
+    user = orm.Required('User')
+    post = orm.Required('Post')
+    last_id = orm.Required(int)

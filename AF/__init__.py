@@ -37,7 +37,7 @@ users = {}
 import AF.socket_utils
 from AF.resources.token import Token
 from AF.resources.users import UserList, UserItem, UserPostList, UserCommentList
-from AF.resources.posts import PostList, PostItem, PostCommentList
+from AF.resources.posts import PostList, PostItem, PostCommentList, PostCommentLastItem
 from AF.resources.comments import CommentList, CommentItem
 from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList, FandomPostList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
@@ -67,6 +67,7 @@ api.add_resource(BlogPostList, '/blogs/<int:id>/posts')
 api.add_resource(PostList, '/posts')
 api.add_resource(PostItem, '/posts/<int:id>')
 api.add_resource(PostCommentList, '/posts/<int:id>/comments')
+api.add_resource(PostCommentLastItem, '/posts/<int:id>/comments/last')
 ###
 api.add_resource(CommentList, '/comments')
 api.add_resource(CommentItem, '/comments/<int:id>')

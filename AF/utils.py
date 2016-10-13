@@ -40,6 +40,7 @@ class Error(Exception):
         'E1071': ['Reserved', 400],  # Анти-спам
         'E1072': ['Comment content must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['comment_content']), 400],
         'E1073': ['Comment with specified ID doesn\'t exists.', 404],
+        'E1074': ['Comment does not exist or does not belong to this post', 403],
         # OTHER
         'E1101': ['One or multiple required parameters were not transferred or invalid.', 400],
         'E1102': ['You don\'t have sufficent permissions to execute this operation.', 403],

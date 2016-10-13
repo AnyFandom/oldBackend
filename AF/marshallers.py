@@ -1,5 +1,8 @@
 from flask_restful import fields
-
+from AF.utils import authorized
+from flask import g
+import pickle
+from pony import orm
 
 class UserField(fields.Raw):
     def format(self, value):
@@ -51,7 +54,7 @@ post_marshaller = {
     'owner': UserField,
     'comment_count': fields.Integer,
     'date': fields.DateTime(dt_format='iso8601'),
-    'blog': BlogField
+    'blog': BlogField,
 }
 
 comment_marshaller = {
