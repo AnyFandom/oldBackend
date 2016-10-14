@@ -1,4 +1,6 @@
 import pickle
+import random
+import string
 
 from flask import g, url_for
 from flask_restful import Resource, marshal
@@ -110,6 +112,7 @@ class UserItem(Resource):
         if args.get('new_password'):
             if user.check_password(args.get('password')):
                 user.password = between(args['new_password'], app.config['MIN_MAX']['password'], 'E1033')
+                user.user_salt = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32))
             else:
                 raise Error('E1036')
         if args.get('description'):
