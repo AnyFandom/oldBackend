@@ -72,11 +72,12 @@ api.add_resource(PostCommentLastItem, '/posts/<int:id>/comments/last')
 api.add_resource(CommentList, '/comments')
 api.add_resource(CommentItem, '/comments/<int:id>')
 
+argparser = argparse.ArgumentParser()
+argparser.add_argument('-t', '--testing', default='0')
+namespace = argparser.parse_args(sys.argv[1:])
+
 def init():
     try:
-        argparser = argparse.ArgumentParser()
-        argparser.add_argument('-t', '--testing', default='0')
-        namespace = argparser.parse_args(sys.argv[1:])
         db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
         db.generate_mapping(create_tables=True)
     except TypeError:
@@ -193,6 +194,7 @@ def init_env():
 @app.route('/clearenv')
 def clearenv():
     global db
-    db.drop_all_tables(with_all_data=True)
-    db.create_tables()
+    if namespace.testing != '0':
+        db.drop_all_tables(with_all_data=True)
+        db.create_tables()
     return ''
