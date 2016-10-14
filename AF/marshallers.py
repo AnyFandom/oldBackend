@@ -1,8 +1,4 @@
 from flask_restful import fields
-from AF.utils import authorized
-from flask import g
-import pickle
-from pony import orm
 
 class UserField(fields.Raw):
     def format(self, value):

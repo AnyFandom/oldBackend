@@ -45,7 +45,7 @@ class PostList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'posts': marshal(list(Post.select().order_by(Post.id.desc())[:]), post_marshaller)}
+        return 'success', {'posts': marshal(list(Post.select().order_by(Post.id.desc())), post_marshaller)}
 
 
 class PostItem(Resource):
@@ -124,12 +124,12 @@ class PostCommentList(Resource):
                     resp.extend(recursion(comment.answers.order_by(Comment.id)))
                 return resp
 
-            resp = Comment.select(lambda p: p.post == post and p.parent is None)[:]  # Получаем все "корневые" комменты
+            resp = Comment.select(lambda p: p.post == post and p.parent is None)  # Получаем все "корневые" комменты
             resp = recursion(resp)  # Рекурсивно формируем список комментов
 
             return 'success', {'comments': marshal(resp, comment_marshaller)}
         else:
-            return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)[:]), comment_marshaller)}
+            return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)), comment_marshaller)}
 
 
 class PostCommentLastItem(Resource):
@@ -141,7 +141,7 @@ class PostCommentLastItem(Resource):
         except orm.core.ObjectNotFound:
             raise Error('E1063')
 
-        if not authorized:
+        if not authorized():
             return 'success', {'last_comment': 0}
 
         last_comment = LastComment.select(lambda p: p.post==post and p.user==pickle.loads(g.user)).get()
