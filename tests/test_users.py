@@ -185,11 +185,30 @@ def test_user_get_by_username():
     assert r.status_code == 200
 
 
-def test_user_get_by_id_with_username():
+def test_user_get_by_id_with_token():
     options = {
         'token': token
     }
     r = requests.get(BASE_URL+'/users/profile/unittest-users', data=options)
+    assert r.status_code == 200
+
+
+#
+# Test user current
+#
+def test_user_get_current_without_token():
+    options = {
+    }
+    r = requests.get(BASE_URL+'/users/current', params=options)
+    assert r.status_code != 200
+
+
+def test_user_get_current_with_token():
+    options = {
+        'token': token,
+    }
+    r = requests.get(BASE_URL+'/users/current', params=options)
+    print(r.json(), token)
     assert r.status_code == 200
 
 
