@@ -188,3 +188,11 @@ def init_env():
     c = Comment(content='Test comment', depth=0, parent=None, post=p, owner=u)
     db.commit()
     return 'success', {'status': 'OK'}
+
+
+@app.route('/clearenv')
+def clearenv():
+    global db
+    db.drop_all_tables(with_all_data=True)
+    db.create_tables()
+    return ''
