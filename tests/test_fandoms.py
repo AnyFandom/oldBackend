@@ -9,12 +9,13 @@ user = {}
 
 fandom = {}
 fandom_location = {}
+
 #
-# Test add, authenficate and get user.
+# Add, authenficate and get user.
 #
 
 
-def test_user_add():
+def user_add():
     global user_location
     options = {
         'username': '{}'.format(username),
@@ -28,7 +29,7 @@ def test_user_add():
     user_location = data['data']['Location']
 
 
-def test_user_authenficate():
+def user_authenficate():
     global token
     options = {
         'username': '{}'.format(username),
@@ -40,7 +41,7 @@ def test_user_authenficate():
     assert 'token' in list(data.keys())
 
 
-def test_user_get_user_by_user_location():
+def user_get_user_by_user_location():
     global user
     options = {
     }
@@ -49,6 +50,11 @@ def test_user_get_user_by_user_location():
     assert r.status_code == 200
     assert 'user' in data
     user = data['user']
+
+
+user_add()
+user_authenficate()
+user_get_user_by_user_location()
 
 
 #
@@ -231,6 +237,52 @@ def test_fandom_edit_long_description():
     assert r.status_code != 200
 
 
+def test_fandom_edit_title():
+    options = {
+        'token': token,
+        'title': 'Title edit',
+    }
+    edit_r = requests.patch(BASE_URL+'/fandoms/{}'.format(fandom['id']), data=options)
+    assert edit_r.status_code == 200
+
+    get_r = requests.get(BASE_URL+'/fandoms/{}'.format(fandom['id']))
+    assert get_r.status_code == 200
+    get_data = get_r.json()['data']
+    assert 'fandom' in list(get_data.keys())
+    assert get_data['fandom']['title'] == 'Title edit'
+
+
+def test_fandom_edit_description():
+    options = {
+        'token': token,
+        'description': 'Description edit',
+    }
+    edit_r = requests.patch(BASE_URL+'/fandoms/{}'.format(fandom['id']), data=options)
+    assert edit_r.status_code == 200
+
+    get_r = requests.get(BASE_URL+'/fandoms/{}'.format(fandom['id']))
+    assert get_r.status_code == 200
+    get_data = get_r.json()['data']
+    assert 'fandom' in list(get_data.keys())
+    assert get_data['fandom']['description'] == 'Description edit'
+
+
+def test_fandom_edit_avatar():
+    options = {
+        'token': token,
+        'avatar': 'https://cdn.everypony.ru/storage/03/42/62/2016/06/24/avatar_100x100.png',
+    }
+    edit_r = requests.patch(BASE_URL+'/fandoms/{}'.format(fandom['id']), data=options)
+    assert edit_r.status_code == 200
+
+    get_r = requests.get(BASE_URL+'/fandoms/{}'.format(fandom['id']))
+    assert get_r.status_code == 200
+    get_data = get_r.json()['data']
+    assert 'fandom' in list(get_data.keys())
+    assert get_data['fandom']['avatar'] == 'https://cdn.everypony.ru/storage/03/42/62/2016/06/24/avatar_100x100.png'
+
+
+
 #
 # Test delete fandom
 #
@@ -249,19 +301,6 @@ def test_fandom_delete_with_token():
     }
     r = requests.delete(BASE_URL+'/fandoms/{}'.format(fandom['id']), data=options)
     assert r.status_code != 200
-
-
-#
-# Test delete user
-#
-
-def test_user_delete():
-    options = {
-        'token': token,
-    }
-    r = requests.delete(BASE_URL+'/users/id/{}'.format(user['id']), params=options)
-    print(r.json())
-    assert r.status_code == 200
 
 
 def teardown_module(module):
