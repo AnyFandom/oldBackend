@@ -382,3 +382,7 @@ def test_user_delete():
     r = requests.delete(BASE_URL+'/users/id/{}'.format(user['id']), params=options)
     print(r.json())
     assert r.status_code == 200
+
+
+def teardown_module(module):
+    requests.get(BASE_URL+'/clearenv')
