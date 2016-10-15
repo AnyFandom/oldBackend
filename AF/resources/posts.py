@@ -157,9 +157,11 @@ class PostCommentLastItem(Resource):
 
     @jsend
     @orm.db_session
-    def post(self, id):
+    def patch(self, id):
         args = parser(g.args,
-            ('comment', int, True))
+            ('comment', int, False))
+        if not args.get('comment'):
+            return 'success', {}
         try:
             post = Post[id]
         except orm.core.ObjectNotFound:
@@ -173,6 +175,6 @@ class PostCommentLastItem(Resource):
             else:
                 last_comment = LastComment(user=pickle.loads(g.user),post=post, last_id=args['comment'])
             db.commit()
-            return 'success', {'last_comment': last_comment.last_id}
+            return 'success', {}
         else:
             raise Error('E1074')

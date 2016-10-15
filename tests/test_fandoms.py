@@ -8,7 +8,7 @@ username = 'unittest-fandoms'
 user = {}
 
 fandom = {}
-fandom_location = {}
+fandom_location = ''
 
 
 def setup_module(module):

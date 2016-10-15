@@ -8,13 +8,13 @@ username = 'unittest-posts'
 user = {}
 
 fandom = {}
-fandom_location = {}
+fandom_location = ''
 
 blog = {}
-blog_location = {}
+blog_location = ''
 
 post = {}
-post_location = {}
+post_location = ''
 
 
 def setup_module(module):

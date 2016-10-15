@@ -9,10 +9,10 @@ username = 'unittest-blogs'
 user = {}
 
 fandom = {}
-fandom_location = {}
+fandom_location = ''
 
 blog = {}
-blog_location = {}
+blog_location = ''
 
 
 def setup_module(module):

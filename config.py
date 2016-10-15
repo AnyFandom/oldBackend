@@ -23,5 +23,5 @@ MIN_MAX = {
     'post_title': [2, 200],
     'post_content': [2, 150000],
     # COMMENT
-    'comment_content': [2, 250]
+    'comment_content': [2, 50000]
 }

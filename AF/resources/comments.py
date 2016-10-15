@@ -81,11 +81,11 @@ class CommentItem(Resource):
             raise Error('E1102')
 
         comment.delete()
-        db.commit()
         send_update('comment-list', comment.post.id)
         send_update('comment', comment.id)
+        db.commit()
 
-        return 'success', None, 201
+        return 'success', None, 200
 
     @jsend
     @orm.db_session
@@ -105,9 +105,9 @@ class CommentItem(Resource):
         # parser.add_argument('content', type=str, required=True)
         # args = parser.parse_args()
         args = parser(g.args,
-            ('content', str, True))
+            ('content', str, False))
         if not args:
-            raise Error('E1101')
+            return 'success', None, 200
 
         comment.content = between(args['content'], app.config['MIN_MAX']['comment_content'], 'E1072')
 
