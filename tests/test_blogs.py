@@ -5,7 +5,7 @@ from conf import BASE_URL
 requests.get(BASE_URL+'/clearenv')
 token = ''
 user_location = ''
-username = 'unittest-fandoms'
+username = 'unittest-blogs'
 user = {}
 
 fandom = {}
@@ -53,7 +53,7 @@ class TestBlogs():
         r = requests.post(BASE_URL+'/token', data=options)
         data = r.json()['data']
         token = data['token']
-        assert 'token' in list(data.keys())
+        assert 'token' in data
 
 
     def user_get_user_by_user_location(self):
@@ -78,7 +78,7 @@ class TestBlogs():
         r = requests.post(BASE_URL+'/fandoms', data=options)
         data = r.json()['data']
         assert r.status_code == 201
-        assert 'Location' in list(data.keys())
+        assert 'Location' in data
         fandom_location = data['Location']
 
 
@@ -89,7 +89,7 @@ class TestBlogs():
         r = requests.get(BASE_URL+fandom_location, params=options)
         data = r.json()['data']
         assert r.status_code == 200
-        assert 'fandom' in list(data.keys())
+        assert 'fandom' in data
         fandom = data['fandom']
 
 
@@ -169,7 +169,7 @@ class TestBlogs():
         r = requests.post(BASE_URL+'/blogs', data=options)
         data = r.json()['data']
         assert r.status_code == 201
-        assert 'Location' in list(data.keys())
+        assert 'Location' in data
         blog_location = data['Location']
 
 
@@ -185,7 +185,7 @@ class TestBlogs():
         r = requests.get(BASE_URL+blog_location)
         assert r.status_code == 200
         data = r.json()['data']
-        assert 'blog' in list(data.keys())
+        assert 'blog' in data
         blog = data['blog']
 
 
@@ -195,7 +195,18 @@ class TestBlogs():
         r = requests.get(BASE_URL+'/blogs/{}'.format(blog['id']))
         assert r.status_code == 200
         data = r.json()['data']
-        assert 'blog' in list(data.keys())
+        assert 'blog' in data
+
+
+    def test_blog_get_from_fandom(self):
+        options = {
+        }
+        r = requests.get(BASE_URL+'/fandoms/{}/blogs'.format(fandom['id']), params=options)
+        assert r.status_code == 200
+        data = r.json()['data']
+        assert 'blogs' in data
+        fandom_blogs = [b['id'] for b in data['blogs']]
+        assert blog['id'] in fandom_blogs
 
 
     #
@@ -256,7 +267,7 @@ class TestBlogs():
         get_r = requests.get(BASE_URL+'/blogs/{}'.format(blog['id']))
         assert get_r.status_code == 200
         get_data = get_r.json()['data']
-        assert 'blog' in list(get_data.keys())
+        assert 'blog' in get_data
         assert get_data['blog']['title'] == 'Title edit'
 
 
@@ -271,7 +282,7 @@ class TestBlogs():
         get_r = requests.get(BASE_URL+'/blogs/{}'.format(blog['id']))
         assert get_r.status_code == 200
         get_data = get_r.json()['data']
-        assert 'blog' in list(get_data.keys())
+        assert 'blog' in get_data
         assert get_data['blog']['description'] == 'Description edit'
 
 
@@ -286,7 +297,7 @@ class TestBlogs():
         get_r = requests.get(BASE_URL+'/blogs/{}'.format(blog['id']))
         assert get_r.status_code == 200
         get_data = get_r.json()['data']
-        assert 'blog' in list(get_data.keys())
+        assert 'blog' in get_data
         assert get_data['blog']['avatar'] == 'https://cdn.everypony.ru/storage/03/42/62/2016/06/24/avatar_100x100.png'
 
 
@@ -295,11 +306,11 @@ class TestBlogs():
     #
 
 
-    def test_blog_delete_without_token(self):
+    def _blog_delete_without_token(self):
         options = {
         }
         r = requests.delete(BASE_URL+'/blogs/{}'.format(blog['id']), data=options)
-        assert r.status_code != 200
+        assert r.status_code != 201
 
 
     def test_blog_delete_with_token(self):
@@ -307,4 +318,5 @@ class TestBlogs():
             'token': token
         }
         r = requests.delete(BASE_URL+'/blogs/{}'.format(blog['id']), data=options)
-        assert r.status_code != 200
+        print(r.content)
+        assert r.status_code == 200

@@ -74,7 +74,7 @@ class PostItem(Resource):
         post.delete()
         db.commit()
 
-        return 'success', None, 201
+        return 'success', None, 200
 
     @jsend
     @orm.db_session
@@ -92,12 +92,15 @@ class PostItem(Resource):
 
         args = parser(g.args,
             ('title', str, False),
-            ('content', str, False))
+            ('content', str, False),
+            ('preview', str, False),)
 
         if args.get('title'):
             post.title = between(args['title'], app.config['MIN_MAX']['post_title'], 'E1061')
         if args.get('content'):
             post.content = between(args['content'], app.config['MIN_MAX']['post_content'], 'E1062')
+        if args.get('preview'):
+            post.preview_image = args['preview']
 
         db.commit()
 

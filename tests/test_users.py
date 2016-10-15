@@ -151,7 +151,7 @@ class TestUsers():
         r = requests.post(BASE_URL+'/token', data=options)
         data = r.json()['data']
         token = data['token']
-        assert 'token' in list(data.keys())
+        assert 'token' in data
 
 
     #
@@ -200,6 +200,17 @@ class TestUsers():
         }
         r = requests.get(BASE_URL+'/users/profile/unittest-users', data=options)
         assert r.status_code == 200
+
+
+    def test_user_get_from_list(self):
+        options = {
+        }
+        r = requests.get(BASE_URL+'/users', params=options)
+        assert r.status_code == 200
+        data = r.json()['data']
+        assert 'users' in data
+        users = [u['id'] for u in data['users']]
+        assert user['id'] in users
 
 
     #
@@ -361,7 +372,7 @@ class TestUsers():
         r = requests.post(BASE_URL+'/token', data=options)
         data = r.json()['data']
         token_new = data['token']
-        assert 'token' in list(data.keys())
+        assert 'token' in data
 
 
     #

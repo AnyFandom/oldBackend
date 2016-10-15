@@ -47,7 +47,7 @@ class TestFandoms():
         r = requests.post(BASE_URL+'/token', data=options)
         data = r.json()['data']
         token = data['token']
-        assert 'token' in list(data.keys())
+        assert 'token' in data
 
 
     def user_get_user_by_user_location(self):
@@ -92,7 +92,7 @@ class TestFandoms():
         r = requests.post(BASE_URL+'/fandoms', data=options)
         data = r.json()['data']
         assert r.status_code == 201
-        assert 'Location' in list(data.keys())
+        assert 'Location' in data
         fandom_location = data['Location']
 
 
@@ -117,7 +117,7 @@ class TestFandoms():
         r = requests.post(BASE_URL+'/fandoms', data=options)
         data = r.json()['data']
         assert r.status_code == 201
-        assert 'Location' in list(data.keys())
+        assert 'Location' in data
         fandom_location = data['Location']
 
 
@@ -168,7 +168,7 @@ class TestFandoms():
         r = requests.post(BASE_URL+'/fandoms', data=options)
         data = r.json()['data']
         assert r.status_code == 201
-        assert 'Location' in list(data.keys())
+        assert 'Location' in data
         fandom_location = data['Location']
 
 
@@ -187,7 +187,7 @@ class TestFandoms():
         r = requests.get(BASE_URL+fandom_location, params=options)
         data = r.json()['data']
         assert r.status_code == 200
-        assert 'fandom' in list(data.keys())
+        assert 'fandom' in data
         fandom = data['fandom']
 
 
@@ -197,7 +197,18 @@ class TestFandoms():
         r = requests.get(BASE_URL+'/fandoms/{}'.format(fandom['id']), params=options)
         data = r.json()['data']
         assert r.status_code == 200
-        assert 'fandom' in list(data.keys())
+        assert 'fandom' in data
+
+
+    def test_fandom_get_from_list(self):
+        options = {
+        }
+        r = requests.get(BASE_URL+'/fandoms', params=options)
+        assert r.status_code == 200
+        data = r.json()['data']
+        assert 'fandoms' in data
+        fandoms = [f['id'] for f in data['fandoms']]
+        assert fandom['id'] in fandoms
 
 
     #
@@ -258,7 +269,7 @@ class TestFandoms():
         get_r = requests.get(BASE_URL+'/fandoms/{}'.format(fandom['id']))
         assert get_r.status_code == 200
         get_data = get_r.json()['data']
-        assert 'fandom' in list(get_data.keys())
+        assert 'fandom' in get_data
         assert get_data['fandom']['title'] == 'Title edit'
 
 
@@ -273,7 +284,7 @@ class TestFandoms():
         get_r = requests.get(BASE_URL+'/fandoms/{}'.format(fandom['id']))
         assert get_r.status_code == 200
         get_data = get_r.json()['data']
-        assert 'fandom' in list(get_data.keys())
+        assert 'fandom' in get_data
         assert get_data['fandom']['description'] == 'Description edit'
 
 
@@ -288,7 +299,7 @@ class TestFandoms():
         get_r = requests.get(BASE_URL+'/fandoms/{}'.format(fandom['id']))
         assert get_r.status_code == 200
         get_data = get_r.json()['data']
-        assert 'fandom' in list(get_data.keys())
+        assert 'fandom' in get_data
         assert get_data['fandom']['avatar'] == 'https://cdn.everypony.ru/storage/03/42/62/2016/06/24/avatar_100x100.png'
 
 
@@ -310,4 +321,4 @@ class TestFandoms():
             'token': token
         }
         r = requests.delete(BASE_URL+'/fandoms/{}'.format(fandom['id']), data=options)
-        assert r.status_code != 200
+        assert r.status_code == 200
