@@ -14,6 +14,8 @@ from flask_socketio import SocketIO, join_room
 class MyApi(Api):
     def handle_error(self, e):
         code = getattr(e, 'code', 500)
+        if e.__class__.__name__ == 'Error':
+            return handle_error(e)
         if code == 405:  # Больше некуда это пихать чтоб работало
             return handle_error(Error('E1202'))
         else:
