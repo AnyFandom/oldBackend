@@ -152,7 +152,7 @@ def handle_init(token):
         return
     user = User.check_auth_token(token)
     if not user:
-        raise Error('E1001')
+        return
 
     if user.id in users.keys():
         users[user.id].append(request.sid)
