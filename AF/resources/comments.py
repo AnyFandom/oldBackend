@@ -46,8 +46,7 @@ class CommentList(Resource):
         db.commit()
 
         send_update('comment-list', post.id)
-        if parent:
-            print('Notification!')
+        if parent and parent.owner != pickle.loads(g.user):
             send_notification('New answer', 'New answer! ' + comment.content, comment.parent.owner.id)
         return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
 
