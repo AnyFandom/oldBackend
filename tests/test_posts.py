@@ -141,7 +141,7 @@ class TestPosts():
             'title': 'Test',
             'blog': blog['id'],
             'content': 'Test content',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -152,7 +152,7 @@ class TestPosts():
             'token': token,
             'blog': blog['id'],
             'content': 'Test content',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -165,7 +165,7 @@ class TestPosts():
             'title': 'T',
             'blog': blog['id'],
             'content': 'Test content',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -178,7 +178,7 @@ class TestPosts():
             'title': 'T'*201,
             'blog': blog['id'],
             'content': 'Test content',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -189,7 +189,7 @@ class TestPosts():
             'token': token,
             'title': 'Test',
             'blog': blog['id'],
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -202,7 +202,7 @@ class TestPosts():
             'title': 'Test',
             'blog': blog['id'],
             'content': 'T',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -215,7 +215,7 @@ class TestPosts():
             'title': 'Test',
             'blog': blog['id'],
             'content': 'T'*150001,
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -226,7 +226,7 @@ class TestPosts():
             'token': token,
             'title': 'Test',
             'content': 'Test content',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -238,7 +238,7 @@ class TestPosts():
             'title': 'Test',
             'blog': 100500,
             'content': 'Test content',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code > 201
@@ -251,7 +251,7 @@ class TestPosts():
             'title': 'Test',
             'blog': blog['id'],
             'content': 'Test content',
-            'preview': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
+            'preview_image': 'http://cs4.pikabu.ru/images/big_size_comm/2014-03_5/13954947452308.png'
         }
         r = requests.post(BASE_URL+'/posts', data=options)
         assert r.status_code == 201
@@ -365,7 +365,7 @@ class TestPosts():
             'title': 'Test edit title',
             'blog': blog['id'],
             'content': 'Test edit content',
-            'preview': 'http://www.otakustudy.com/wp-content/uploads/2014/03/2321.jpg',
+            'preview_image': 'http://www.otakustudy.com/wp-content/uploads/2014/03/2321.jpg',
         }
         r = requests.patch(BASE_URL+'/posts/{}'.format(post['id']), data=options)
         assert r.status_code == 200
@@ -373,7 +373,7 @@ class TestPosts():
         assert post['title'] == options['title']
         assert post['content'] == options['content']
         assert post['blog']['id'] == options['blog']
-        assert post['preview_image'] == options['preview']
+        assert post['preview_image'] == options['preview_image']
 
 
     #

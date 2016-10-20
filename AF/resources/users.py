@@ -3,15 +3,15 @@ import random
 import string
 
 from flask import g, url_for
-from flask_restful import Resource, marshal
+from flask_restful import Resource
 
 from pony import orm
 
-from AF import app, db
+from AF import db
 
-from AF.utils import jsend, Error, parser, between, authorized
-from AF.models import Comment, Post, User
-from AF.marshallers import user_marshaller, post_marshaller, comment_marshaller
+from AF.utils import jsend, Error, nparser, authorized
+from AF.models import User
+from AF.marshallers import UserSchema, PostSchema, CommentSchema
 from AF.socket_utils import send_update
 
 
@@ -36,22 +36,8 @@ class UserList(Resource):
     @jsend
     @orm.db_session
     def post(self):
-        args = parser(g.args,
-            ('username', str, True),
-            ('password', str, True),
-            ('avatar', str, False),
-            ('description', str, False))
-        if not args:
-            raise Error('E1101')
-
-        username = between(args['username'], app.config['MIN_MAX']['username'], 'E1032')
-        password = between(args['password'], app.config['MIN_MAX']['password'], 'E1033')
-        user = User(username=username, password=password)
-
-        if args.get('description', None):
-            user.description = between(args['description'], app.config['MIN_MAX']['user_description'], 'E1034')
-        if args.get('avatar', None):
-            user.avatar = args['avatar']
+        args = nparser(g.args, ['username', 'password', 'description', 'avatar'])
+        user = User(**UserSchema().load(args).data)
 
         try:
             db.commit()
@@ -64,7 +50,7 @@ class UserList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'users': marshal(list(User.select()[:]), user_marshaller)}
+        return 'success', {'users': UserSchema(many=True).dump(User.select()).data}
 
 
 class UserItem(Resource):
@@ -72,7 +58,7 @@ class UserItem(Resource):
     @orm.db_session
     def get(self, id=None, username=None):
         user = get_user(id, username)
-        return 'success', {'user': marshal(user, user_marshaller)}
+        return 'success', {'user': UserSchema().dump(user).data}
 
     @jsend
     @orm.db_session
@@ -82,7 +68,7 @@ class UserItem(Resource):
         if not authorized():
             raise Error('E1102')
 
-        #if user != pickle.loads(g.user):
+        # if user != pickle.loads(g.user):
         #    raise Error('E1102')
 
         user.delete()
@@ -103,22 +89,22 @@ class UserItem(Resource):
         if user != pickle.loads(g.user):
             raise Error('E1102')
 
-        args = parser(g.args,
-            ('password', str, False),
-            ('new_password', str, False),
-            ('avatar', str, False),
-            ('description', str, False))
+        args = nparser(g.args, ['password_old', 'password', 'avatar', 'description'])
+        changes = UserSchema(partial=True).load(args).data  # Вместо кучи вызовов between
 
-        if args.get('new_password'):
-            if user.check_password(args.get('password')):
-                user.password = between(args['new_password'], app.config['MIN_MAX']['password'], 'E1033')
+        if changes.get('password'):
+            if user.check_password(args.get('password_old')):
+                user.password = changes['password']
                 user.user_salt = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32))
             else:
-                raise Error('E1036')
-        if args.get('description'):
-            user.description = between(args['description'], app.config['MIN_MAX']['user_description'], 'E1034')
-        if args.get('avatar'):
-            user.avatar = args['avatar']
+                if not args.get('password_old'):
+                    raise Error('E1036')
+                else:
+                    raise Error('E1004')
+        if changes.get('description'):
+            user.description = changes['description']
+        if changes.get('avatar'):
+            user.avatar = changes['avatar']
 
         db.commit()
         send_update('user-list')
@@ -132,7 +118,7 @@ class UserPostList(Resource):
     @orm.db_session
     def get(self, id=None, username=None):
         user = get_user(id, username)
-        return 'success', {'posts': marshal(list(Post.select(lambda p: p.owner == user)), post_marshaller)}
+        return 'success', {'posts': PostSchema(many=True).dump(user.posts.select()).data}
 
 
 class UserCommentList(Resource):
@@ -140,4 +126,4 @@ class UserCommentList(Resource):
     @orm.db_session
     def get(self, id=None, username=None):
         user = get_user(id, username)
-        return 'success', {'comments': marshal(list(Comment.select(lambda p: p.owner == user)), comment_marshaller)}
+        return 'success', {'comments': CommentSchema(many=True).dump(user.comments.select()).data}

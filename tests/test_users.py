@@ -33,7 +33,7 @@ class TestUsers():
 
     def test_user_add_with_short_username(self):
         options = {
-            'username': 'un',
+            'username': 'u',
             'password': 'unittest-users',
         }
 
@@ -315,8 +315,8 @@ class TestUsers():
     def test_user_edit_password_with_wrong_old_password(self):
         options = {
             'token': token,
-            'password': 'un',
-            'new_password': 'unittest-users_new'
+            'password_old': 'un',
+            'password': 'unittest-users_new'
         }
         r = requests.patch(BASE_URL+'/users/profile/unittest-users', data=options)
         data = r.json()
@@ -326,8 +326,8 @@ class TestUsers():
     def test_user_edit_password_with_short_password(self):
         options = {
             'token': token,
-            'password': 'unittest-users',
-            'new_password': 'un'
+            'password_old': 'unittest-users',
+            'password': 'un'
         }
         r = requests.patch(BASE_URL+'/users/profile/unittest-users', data=options)
         data = r.json()
@@ -338,8 +338,8 @@ class TestUsers():
     def test_user_edit_password_with_long_password(self):
         options = {
             'token': token,
-            'password': 'unittest-users',
-            'new_password': 'u'*201
+            'password_old': 'unittest-users',
+            'password': 'u'*201
         }
         r = requests.patch(BASE_URL+'/users/profile/unittest-users', data=options)
         data = r.json()
@@ -350,8 +350,8 @@ class TestUsers():
     def test_user_edit_password(self):
         options = {
             'token': token,
-            'password': 'unittest-users',
-            'new_password': 'unittest-users_new'
+            'password_old': 'unittest-users',
+            'password': 'unittest-users_new'
         }
         r = requests.patch(BASE_URL+'/users/profile/unittest-users', data=options)
         data = r.json()

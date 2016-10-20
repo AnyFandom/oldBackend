@@ -10,18 +10,18 @@ SECRET_TOKEN_KEY = '<INSERT YOUR SECRET KEY HERE>'
 
 MIN_MAX = {
     # USER
-    'username': [2, 50],
-    'password': [6, 200],
-    'user_description': [0, 5000],
+    'username': {'min': 2, 'max': 50},
+    'password': {'min': 6, 'max': 200},
+    'user_description': {'min': 0, 'max': 5000},
     # FANDOM
-    'fandom_title': [2, 200],
-    'fandom_description': [0, 5000],
+    'fandom_title': {'min': 2, 'max': 200},
+    'fandom_description': {'min': 0, 'max': 5000},
     # BLOG
-    'blog_title': [2, 200],
-    'blog_description': [0, 5000],
+    'blog_title': {'min': 2, 'max': 200},
+    'blog_description': {'min': 0, 'max': 5000},
     # POST
-    'post_title': [2, 200],
-    'post_content': [2, 150000],
+    'post_title': {'min': 2, 'max': 200},
+    'post_content': {'min': 2, 'max': 150000},
     # COMMENT
-    'comment_content': [2, 50000]
+    'comment_content': {'min': 2, 'max': 50000}
 }

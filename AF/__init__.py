@@ -6,6 +6,7 @@ import sys
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 from flask_restful import Api
+# from flask_marshmallow import Marshmallow
 from pony import orm
 
 from flask_socketio import SocketIO, join_room
@@ -23,6 +24,7 @@ class MyApi(Api):
 
 app = Flask(__name__)
 api = MyApi(app)
+# ma = Marshmallow(app)
 
 socketio = SocketIO(app)
 
@@ -87,6 +89,7 @@ def init():
     finally:
         g.ready = True
 
+
 @app.before_first_request
 def before_first_request():
     if not getattr(g, 'ready', False):
@@ -136,9 +139,11 @@ def payload_too_large(e):
 def handle_error(error):
     return jsonify(error.to_dict()), error.code
 
+
 @socketio.on('connect')
 def socket_connect():
     before_first_request()
+
 
 @socketio.on('init')
 @orm.db_session

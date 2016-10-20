@@ -1,14 +1,21 @@
 from flask import g, url_for
-from flask_restful import Resource, marshal
+from flask_restful import Resource
 
 from pony import orm
 
-from AF import app, db
+from AF import db
 
-from AF.utils import authorized, Error, jsend, parser, between
-from AF.models import Fandom, Blog, Post
-from AF.marshallers import fandom_marshaller, blog_marshaller, post_marshaller
+from AF.utils import authorized, Error, jsend, nparser
+from AF.models import Fandom, Post
+from AF.marshallers import FandomSchema, BlogSchema, PostSchema
 from AF.socket_utils import send_update
+
+
+def get_fandom(id):
+    try:
+        return Fandom[id]
+    except orm.core.ObjectNotFound:
+        raise Error('E1045')
 
 
 class FandomList(Resource):
@@ -18,20 +25,8 @@ class FandomList(Resource):
         if not authorized():
             raise Error('E1102')
 
-        args = parser(g.args,
-            ('title', str, True),
-            ('description', str, False),
-            ('avatar', str, False))
-        if not args:
-            raise Error('E1101')
-
-        title = between(args['title'], app.config['MIN_MAX']['fandom_title'], 'E1042')
-        fandom = Fandom(title=title)
-
-        if args.get('description', None):
-            fandom.description = between(args['description'], app.config['MIN_MAX']['fandom_description'], 'E1043')
-        if args.get('avatar', None):
-            fandom.avatar = args['avatar']
+        args = nparser(g.args, ['title', 'description', 'avatar'])
+        fandom = Fandom(**FandomSchema().load(args).data)
 
         try:
             db.commit()
@@ -44,25 +39,19 @@ class FandomList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'fandoms': marshal(list(Fandom.select()), fandom_marshaller)}
+        return 'success', {'fandoms': FandomSchema(many=True).dump(Fandom.select()).data}
 
 
 class FandomItem(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            return 'success', {'fandom': marshal(Fandom[id], fandom_marshaller)}
-        except orm.core.ObjectNotFound:
-            raise Error('E1044')
+        return 'success', {'fandom': FandomSchema().dump(get_fandom(id)).data}
 
     @jsend
     @orm.db_session
     def delete(self, id):
-        try:
-            fandom = Fandom[id]
-        except orm.core.ObjectNotFound:
-            raise Error('E1044')
+        fandom = get_fandom(id)
 
         if not authorized():
             raise Error('E1102')
@@ -77,25 +66,20 @@ class FandomItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        try:
-            fandom = Fandom[id]
-        except orm.code.ObjectNotFound:
-            raise Error('E1044')
+        fandom = get_fandom(id)
 
         if not authorized():
             raise Error('E1102')
 
-        args = parser(g.args,
-            ('title', str, False),
-            ('description', str, False),
-            ('avatar', str, False))
+        args = nparser(g.args, ['title', 'description', 'avatar'])
+        changes = FandomSchema(partial=True).load(args).data
 
-        if args.get('title'):
-            fandom.title = between(args['title'], app.config['MIN_MAX']['fandom_title'], 'E1042')
-        if args.get('description'):
-            fandom.description = between(args['description'], app.config['MIN_MAX']['fandom_description'], 'E1043')
-        if args.get('avatar'):
-            fandom.avatar = args['avatar']
+        if changes.get('title'):
+            fandom.title = changes['title']
+        if changes.get('description'):
+            fandom.description = changes['description']
+        if changes.get('avatar'):
+            fandom.avatar = changes['avatar']
 
         db.commit()
         send_update('fandom-list')
@@ -108,21 +92,14 @@ class FandomBlogList(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            fandom = Fandom[id]
-        except orm.core.ObjectNotFound:
-            raise Error('E1044')
-
-        return 'success', {'blogs': marshal(list(Blog.select(lambda p: p.fandom == fandom)), blog_marshaller)}
+        fandom = get_fandom(id)
+        return 'success', {'blogs': BlogSchema(many=True).dump(fandom.blogs.select()).data}
 
 
 class FandomPostList(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            fandom = Fandom[id]
-        except orm.core.ObjectNotFound:
-            raise Error('E1044')
-        fandom_blogs = list(Blog.select(lambda p: p.fandom == fandom))
-        return 'success', {'posts': marshal(list(Post.select(lambda p: p.blog in fandom_blogs)), post_marshaller)}
+        fandom = get_fandom(id)
+        fandom_blogs = fandom.blogs.select()
+        return 'success', {'posts': PostSchema(many=True).dump(Post.select(lambda p: p.blog in fandom_blogs)).data}

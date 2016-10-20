@@ -1,80 +1,136 @@
-from flask_restful import fields
+from marshmallow import validate, ValidationError, post_load, Schema
+from marshmallow.fields import Nested, Integer, String, DateTime, Url
+from pony import orm
 
-class UserField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-            'username': value.username,
-            'avatar': value.avatar
-        }
-
-class FandomField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-            'title': value.title,
-            'avatar': value.avatar
-        }
-
-class BlogField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-            'title': value.title,
-            'avatar': value.avatar,
-            'fandom': FandomField.format(None, value.fandom)
-        }
+from AF import app  # , ma
+from AF.models import User, Fandom, Blog, Post, Comment
+from AF.utils import Error
 
 
-class IdField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-        }
+class CValidationError(ValidationError):
+    def __init__(self, message, field="_schema", **kwargs):
+        self.field = field
+        super(CValidationError, self).__init__(**kwargs, message=message)
+
+    def normalized_messages(self):
+        if isinstance(self.messages, dict):
+            return self.messages
+        if len(self.field_names) == 0:
+            return {self.field: self.messages}
+        return dict((name, self.messages) for name in self.field_names)
 
 
-user_marshaller = {
-    'id': fields.Integer,
-    'username': fields.String,
-    'password': fields.String,
-    'avatar': fields.String,
-    'description': fields.String,
-    'user_salt': fields.String
-}
+class CNested(Nested):
+    def __init__(self, object, nested, **kwargs):
+        self.object = object
+        super(CNested, self).__init__(**kwargs, nested=nested)
 
-post_marshaller = {
-    'id': fields.Integer,
-    'title': fields.String,
-    'content': fields.String,
-    'preview_image': fields.String,
-    'owner': UserField,
-    'comment_count': fields.Integer,
-    'date': fields.DateTime(dt_format='iso8601'),
-    'blog': BlogField,
-}
+    def _deserialize(self, value, attr, data):
+        try:
+            if value in [0, '0']:
+                return None
+            if not isinstance(value, self.object):
+                value = self.object[value]
+        except (orm.core.ObjectNotFound, ValueError):
+            raise CValidationError('Object with specified ID doesn\'t exists.')
 
-comment_marshaller = {
-    'id': fields.Integer,
-    'content': fields.String,
-    'parent': IdField,
-    'depth': fields.Integer,
-    'post': IdField,
-    'owner': UserField,
-    'date': fields.DateTime(dt_format='iso8601')
-}
+        return value
 
-fandom_marshaller = {
-    'id': fields.Integer,
-    'title': fields.String,
-    'description': fields.String,
-    'avatar': fields.String
-}
 
-blog_marshaller = {
-    'id': fields.Integer,
-    'title': fields.String,
-    'description': fields.String,
-    'avatar': fields.String,
-    'fandom': FandomField,
-    'owner': UserField
-}
+class TopSchema(Schema):
+    id = Integer(dump_only=True)
+    created_at = DateTime(dump_only=True)
+
+    def handle_error(self, exc, data):
+        raise Error('E1101', exc.messages)
+
+
+# TODO: Не надо возвращать все, только некоторые поля
+# NOTE: Не ставить default в схемы
+
+
+class UserSchema(TopSchema):
+    username = String(validate=validate.Length(**app.config['MIN_MAX']['username']), required=True)
+    password = String(validate=validate.Length(**app.config['MIN_MAX']['password']), required=True, load_only=True)
+    description = String(validate=validate.Length(**app.config['MIN_MAX']['user_description']))
+    avatar = String()
+    user_salt = String(load_only=True)
+
+    # links = ma.Hyperlinks({
+    #     'self': [
+    #         ma.URLFor('useritem', id='<id>'),
+    #         ma.URLFor('useritem', username='<username>')
+    #     ],
+    #     'blogs': [
+    #         ma.URLFor('userbloglist', id='<id>'),
+    #         ma.URLFor('userbloglist', username='<username>')
+    #     ],
+    #     'posts': [
+    #         ma.URLFor('userpostlist', id='<id>'),
+    #         ma.URLFor('userpostlist', username='<username>')
+    #     ],
+    #     'comments': [
+    #         ma.URLFor('usercommentlist', id='<id>'),
+    #         ma.URLFor('usercommentlist', username='<username>')
+    #     ],
+    # })
+
+
+class FandomSchema(TopSchema):
+    title = String(validate=validate.Length(**app.config['MIN_MAX']['fandom_title']), required=True)
+    description = String(validate=validate.Length(**app.config['MIN_MAX']['fandom_description']))
+    avatar = String()
+
+    # links = ma.Hyperlinks({
+    #     'self': ma.URLFor('fandomitem', id='<id>'),
+    #     'blogs': ma.URLFor('fandombloglist', id='<id>'),
+    #     'posts': ma.URLFor('fandompostlist', id='<id>')
+    # })
+
+
+class BlogSchema(TopSchema):
+    title = String(validate=validate.Length(**app.config['MIN_MAX']['blog_title']), required=True)
+    description = String(validate=validate.Length(**app.config['MIN_MAX']['blog_description']))
+    avatar = String()
+    owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
+    fandom = CNested(Fandom, FandomSchema, required=True, only=['id', 'title', 'avatar'])
+
+    # links = ma.Hyperlinks({
+    #     'self': ma.URLFor('blogitem', id='<id>'),
+    #     'posts': ma.URLFor('blogpostlist', id='<id>')
+    # })
+
+
+class PostSchema(TopSchema):
+    title = String(validate=validate.Length(**app.config['MIN_MAX']['post_title']), required=True)
+    content = String(validate=validate.Length(**app.config['MIN_MAX']['post_content']), required=True)
+    preview_image = String()
+    comment_count = Integer()
+    owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
+    blog = CNested(Blog, BlogSchema, required=True, only=['id', 'title', 'avatar'])
+
+    # links = ma.Hyperlinks({
+    #     'self': ma.URLFor('postitem', id='<id>'),
+    #     'comments': ma.URLFor('postcommentlist', id='<id>')
+    # })
+
+
+class CommentSchema(TopSchema):
+    content = String(validate=validate.Length(**app.config['MIN_MAX']['comment_content']), required=True)
+    parent = CNested(Comment, 'self', only=['id'])  # only=['id', 'content', 'depth', 'owner'])
+    depth = Integer()
+    post = CNested(Post, PostSchema, required=True, only=['id', 'title'])
+    owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
+
+    # links = ma.Hyperlinks({
+    #     'self': ma.URLFor('commentitem', id='<id>')
+    # })
+
+    @post_load
+    def parent_check(self, data):
+        if data.get('parent'):
+            data['depth'] = data['parent'].depth + 1
+            if data['post'] != data['parent'].post:
+                raise CValidationError('Parent does not belong to this post', 'parent')
+        else:
+            data['depth'] = 0

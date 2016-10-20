@@ -1,17 +1,24 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, marshal
+from flask_restful import Resource
 
 from pony import orm
 
-from AF import app, db
+from AF import db
 
-from AF.utils import authorized, Error, jsend, parser, between
-from AF.models import Post, Comment
-from AF.marshallers import comment_marshaller
+from AF.utils import authorized, Error, jsend, nparser
+from AF.models import Comment
+from AF.marshallers import CommentSchema
 
 from AF.socket_utils import send_update, send_notification
+
+
+def get_comment(id):
+    try:
+        return Comment[id]
+    except orm.core.ObjectNotFound:
+        raise Error('E1075')
 
 
 class CommentList(Resource):
@@ -21,57 +28,34 @@ class CommentList(Resource):
         if not authorized():
             raise Error('E1102')
 
-        args = parser(g.args,
-            ('post', int, True),
-            ('parent', int, False),
-            ('content', str, True))
-        if not args:
-            raise Error('E1101')
-
-        try:
-            post = Post[args['post']]
-            parent = None if not args.get('parent', None) else Comment[args['parent']]
-        except (orm.core.ObjectNotFound, KeyError):
-            raise Error('E1101')
-
-        if parent:
-            if parent.post != post:
-                raise Error('E1101')
-
-        depth = 0 if parent is None else (parent.depth + 1)
-
-        content = between(args['content'], app.config['MIN_MAX']['comment_content'], 'E1072')
-        comment = Comment(post=post, parent=parent, depth=depth, content=content, owner=pickle.loads(g.user))
+        args = nparser(g.args, ['post', 'parent', 'content'])
+        comment = Comment(**CommentSchema().load(
+            {**args, 'owner': pickle.loads(g.user)}
+        ).data)
 
         db.commit()
 
-        send_update('comment-list', post.id)
-        if parent and parent.owner != pickle.loads(g.user):
+        send_update('comment-list', comment.post.id)
+        if comment.parent and comment.parent.owner != pickle.loads(g.user):
             send_notification('New answer', 'New answer! ' + comment.content, comment.parent.owner.id)
         return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
 
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'comments': marshal(list(Comment.select()), comment_marshaller)}
+        return 'success', {'comments': CommentSchema(many=True).dump(Comment.select()).data}
 
 
 class CommentItem(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            return 'success', {'comment': marshal(Comment[id], comment_marshaller)}
-        except orm.core.ObjectNotFound:
-            raise Error('E1073')
+        return 'success', {'comment': CommentSchema().dump(get_comment(id)).data}
 
     @jsend
     @orm.db_session
     def delete(self, id):
-        try:
-            comment = Comment[id]
-        except orm.core.ObjectNotFound:
-            raise Error('E1073')
+        comment = get_comment(id)
 
         if not authorized():
             raise Error('E1102')
@@ -89,10 +73,7 @@ class CommentItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        try:
-            comment = Comment[id]
-        except orm.core.ObjectNotFound:
-            raise Error('E1073')
+        comment = get_comment(id)
 
         if not authorized():
             raise Error('E1102')
@@ -103,12 +84,17 @@ class CommentItem(Resource):
         # parser = RequestParser()
         # parser.add_argument('content', type=str, required=True)
         # args = parser.parse_args()
-        args = parser(g.args,
-            ('content', str, False))
-        if not args:
-            return 'success', None, 200
 
-        comment.content = between(args['content'], app.config['MIN_MAX']['comment_content'], 'E1072')
+        # args = parser(g.args,
+        #     ('content', str, True))
+        # if not args:
+        #     raise Error('E1101')
+
+        args = nparser(g.args, ['content'])
+        changes = CommentSchema(partial=True).load(args).data
+
+        if changes.get('content'):
+            comment.content = changes['content']
 
         db.commit()
         send_update('comment-list', comment.post.id)
