@@ -1,6 +1,8 @@
 # utils.py
 
+from AF import app
 from flask import g
+import bleach
 
 
 class Error(Exception):
@@ -101,3 +103,7 @@ def isnum(arg):
 
 def authorized():
     return True if g.get('user', None) else False
+
+
+def clear(text):
+    return bleach.linkify(bleach.clean(text, strip=True, tags=app.config['ALLOWED_TAGS'], attributes=app.config['ALLOWED_ATTRIBUTES']))

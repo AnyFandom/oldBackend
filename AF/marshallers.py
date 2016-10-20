@@ -5,7 +5,7 @@ from pony import orm
 
 from AF import app  # , ma
 from AF.models import User, Fandom, Blog, Post, Comment
-from AF.utils import Error
+from AF.utils import Error, clear
 
 
 class HString(String):
@@ -13,6 +13,13 @@ class HString(String):
         if not isinstance(value, basestring):
             self.fail('invalid')
         return User.hash_password(utils.ensure_text_type(value))
+
+
+class ClearString(String):
+    def _deserialize(self, value, attr, data):
+        if not isinstance(value, basestring):
+            self.fail('invalid')
+        return clear(utils.ensure_text_type(value))
 
 
 class CValidationError(ValidationError):
@@ -65,7 +72,7 @@ class TopSchema(Schema):
 class UserSchema(TopSchema):
     username = String(validate=validate.Length(**app.config['MIN_MAX']['username']), required=True)
     password = HString(validate=validate.Length(**app.config['MIN_MAX']['password']), required=True, load_only=True, attribute='password_hash')
-    description = String(validate=validate.Length(**app.config['MIN_MAX']['user_description']))
+    description = ClearString(validate=validate.Length(**app.config['MIN_MAX']['user_description']))
     avatar = String()
     user_salt = String(load_only=True)
 
@@ -91,7 +98,7 @@ class UserSchema(TopSchema):
 
 class FandomSchema(TopSchema):
     title = String(validate=validate.Length(**app.config['MIN_MAX']['fandom_title']), required=True)
-    description = String(validate=validate.Length(**app.config['MIN_MAX']['fandom_description']))
+    description = ClearString(validate=validate.Length(**app.config['MIN_MAX']['fandom_description']))
     avatar = String()
 
     # links = ma.Hyperlinks({
@@ -103,7 +110,7 @@ class FandomSchema(TopSchema):
 
 class BlogSchema(TopSchema):
     title = String(validate=validate.Length(**app.config['MIN_MAX']['blog_title']), required=True)
-    description = String(validate=validate.Length(**app.config['MIN_MAX']['blog_description']))
+    description = ClearString(validate=validate.Length(**app.config['MIN_MAX']['blog_description']))
     avatar = String()
     owner = CNested(User, UserSchema, required=True ) #, only=['id', 'username', 'avatar'])
     fandom = CNested(Fandom, FandomSchema, required=True)  #, only=['id', 'title', 'avatar'])
@@ -116,7 +123,7 @@ class BlogSchema(TopSchema):
 
 class PostSchema(TopSchema):
     title = String(validate=validate.Length(**app.config['MIN_MAX']['post_title']), required=True)
-    content = String(validate=validate.Length(**app.config['MIN_MAX']['post_content']), required=True)
+    content = ClearString(validate=validate.Length(**app.config['MIN_MAX']['post_content']), required=True)
     preview_image = String()
     comment_count = Integer()
     owner = CNested(User, UserSchema, required=True)  # , only=['id', 'username', 'avatar'])
@@ -129,7 +136,7 @@ class PostSchema(TopSchema):
 
 
 class CommentSchema(TopSchema):
-    content = String(validate=validate.Length(**app.config['MIN_MAX']['comment_content']), required=True)
+    content = ClearString(validate=validate.Length(**app.config['MIN_MAX']['comment_content']), required=True)
     parent = CNested(Comment, 'self', only=['id'])  # only=['id', 'content', 'depth', 'owner'])
     depth = Integer()
     post = CNested(Post, PostSchema, required=True)  # , only=['id', 'title'])

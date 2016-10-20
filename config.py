@@ -25,3 +25,28 @@ MIN_MAX = {
     # COMMENT
     'comment_content': {'min': 2, 'max': 50000}
 }
+
+ALLOWED_TAGS = [
+    'a',
+    'abbr',
+    'acronym',
+    'b',
+    's',
+    'blockquote',
+    'code',
+    'em',
+    'i',
+    'li',
+    'ol',
+    'strong',
+    'ul',
+    'br',
+    'img',
+]
+
+ALLOWED_ATTRIBUTES = {
+    'a': ['href', 'title'],
+    'abbr': ['title'],
+    'acronym': ['title'],
+    'img': ['src', 'alt', 'width', 'height'],
+}
