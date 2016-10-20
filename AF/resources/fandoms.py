@@ -1,13 +1,13 @@
 from flask import g, url_for
-from flask_restful import Resource, marshal
+from flask_restful import Resource
 
 from pony import orm
 
 from AF import app, db
 
 from AF.utils import authorized, Error, jsend, parser, between
-from AF.models import Fandom, Blog, Post
-from AF.marshallers import fandom_marshaller, blog_marshaller, post_marshaller
+from AF.models import Fandom, Post
+from AF.marshallers import FandomSchema
 from AF.socket_utils import send_update
 
 
@@ -44,7 +44,7 @@ class FandomList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'fandoms': marshal(list(Fandom.select()), fandom_marshaller)}
+        return 'success', {'fandoms': FandomSchema(many=True).dump(Fandom.select()).data}
 
 
 class FandomItem(Resource):
@@ -52,7 +52,7 @@ class FandomItem(Resource):
     @orm.db_session
     def get(self, id):
         try:
-            return 'success', {'fandom': marshal(Fandom[id], fandom_marshaller)}
+            return 'success', {'fandom': FandomSchema().dump(Fandom[id]).data}
         except orm.core.ObjectNotFound:
             raise Error('E1044')
 
@@ -113,7 +113,7 @@ class FandomBlogList(Resource):
         except orm.core.ObjectNotFound:
             raise Error('E1044')
 
-        return 'success', {'blogs': marshal(list(Blog.select(lambda p: p.fandom == fandom)), blog_marshaller)}
+        return 'success', {'blogs': FandomSchema(many=True).dump(fandom.blogs.select()).data}
 
 
 class FandomPostList(Resource):
@@ -124,5 +124,5 @@ class FandomPostList(Resource):
             fandom = Fandom[id]
         except orm.core.ObjectNotFound:
             raise Error('E1044')
-        fandom_blogs = list(Blog.select(lambda p: p.fandom == fandom))
-        return 'success', {'posts': marshal(list(Post.select(lambda p: p.blog in fandom_blogs)), post_marshaller)}
+        fandom_blogs = fandom.blogs.select()
+        return 'success', {'posts': FandomSchema(many=True).dump(Post.select(lambda p: p.blog in fandom_blogs)).data}

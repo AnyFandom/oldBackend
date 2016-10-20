@@ -1,7 +1,7 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, marshal
+from flask_restful import Resource
 
 from pony import orm
 
@@ -9,7 +9,7 @@ from AF import app, db
 
 from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Post, Comment
-from AF.marshallers import comment_marshaller
+from AF.marshallers import CommentSchema
 
 from AF.socket_utils import send_update, send_notification
 
@@ -54,7 +54,7 @@ class CommentList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'comments': marshal(list(Comment.select()), comment_marshaller)}
+        return 'success', {'comments': CommentSchema(many=True).dump(Comment.select()).data}
 
 
 class CommentItem(Resource):
@@ -62,7 +62,7 @@ class CommentItem(Resource):
     @orm.db_session
     def get(self, id):
         try:
-            return 'success', {'comment': marshal(Comment[id], comment_marshaller)}
+            return 'success', {'comment': CommentSchema().dump(Comment[id]).data}
         except orm.core.ObjectNotFound:
             raise Error('E1073')
 

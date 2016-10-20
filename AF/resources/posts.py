@@ -1,7 +1,7 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, marshal
+from flask_restful import Resource
 
 from pony import orm
 
@@ -9,7 +9,7 @@ from AF import app, db
 
 from AF.utils import authorized, Error, jsend, parser, between
 from AF.models import Blog, Post, Comment
-from AF.marshallers import post_marshaller, comment_marshaller
+from AF.marshallers import PostSchema, CommentSchema
 from AF.socket_utils import send_update
 
 
@@ -45,7 +45,7 @@ class PostList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'posts': marshal(list(Post.select().order_by(Post.id.desc())), post_marshaller)}
+        return 'success', {'posts': PostSchema(many=True).dump(Post.select()).data}
 
 
 class PostItem(Resource):
@@ -53,7 +53,7 @@ class PostItem(Resource):
     @orm.db_session
     def get(self, id):
         try:
-            return 'success', {'post': marshal(Post[id], post_marshaller)}
+            return 'success', {'post': PostSchema().dump(Post[id]).data}
         except orm.core.ObjectNotFound:
             raise Error('E1063')
 
@@ -131,6 +131,6 @@ class PostCommentList(Resource):
             resp = list(Comment.select(lambda p: p.post == post and p.parent is None))  # Получаем все "корневые" комменты
             resp = recursion(resp)  # Рекурсивно формируем список комментов
 
-            return 'success', {'comments': marshal(resp, comment_marshaller)}
+            return 'success', {'comments': CommentSchema(many=True).dump(resp).data}
         else:
-            return 'success', {'comments': marshal(list(Comment.select(lambda p: p.post == post)), comment_marshaller)}
+            return 'success', {'comments': CommentSchema(many=True).dump(post.comments.select()).data}

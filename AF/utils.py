@@ -41,16 +41,18 @@ class Error(Exception):
         'E1072': ['Comment content must be more than {} and less than {} symbols.'.format(*app.config['MIN_MAX']['comment_content']), 400],
         'E1073': ['Comment with specified ID doesn\'t exists.', 404],
         # OTHER
-        'E1101': ['One or multiple required parameters were not transferred or invalid.', 400],
+        'E1101': ['One or multiple required parameters were not transferred or invalid. See "details" for details.', 400],
         'E1102': ['You don\'t have sufficent permissions to execute this operation.', 403],
         'E1201': ['The specified resource doesn\'t exists.', 404],
         'E1202': ['The resource doesn\'t support the specified HTTP method.', 405],
         'E1203': ['The size of the request body exceeds the maximum size permitted.', 413]
     }
 
-    def __init__(self, error_code):
+    def __init__(self, error_code, details=None):
         Exception.__init__(self)
         self.data = {'code': error_code, 'message': self.errors[error_code][0]}
+        if details:
+            self.data['details'] = details
         self.code = self.errors[error_code][1]
 
     def to_dict(self):

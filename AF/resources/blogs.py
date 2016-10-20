@@ -1,15 +1,15 @@
 import pickle
 
 from flask import g, url_for
-from flask_restful import Resource, marshal
+from flask_restful import Resource
 
 from pony import orm
 
 from AF import app, db
 
 from AF.utils import authorized, Error, jsend, parser, between
-from AF.models import Fandom, Blog, Post
-from AF.marshallers import blog_marshaller, post_marshaller
+from AF.models import Fandom, Blog
+from AF.marshallers import BlogSchema
 from AF.socket_utils import send_update
 
 
@@ -51,7 +51,7 @@ class BlogList(Resource):
     @jsend
     @orm.db_session
     def get(self):
-        return 'success', {'blogs': marshal(list(Blog.select()), blog_marshaller)}
+        return 'success', {'blogs': BlogSchema(many=True).dump(Blog.select()).data}
 
 
 class BlogItem(Resource):
@@ -59,7 +59,7 @@ class BlogItem(Resource):
     @orm.db_session
     def get(self, id):
         try:
-            return 'success', {'blog': marshal(Blog[id], blog_marshaller)}
+            return 'success', {'blog': BlogSchema().dump(Blog[id]).data}
         except orm.core.ObjectNotFound:
             raise Error('E1054')
 
@@ -125,4 +125,4 @@ class BlogPostList(Resource):
         except orm.core.ObjectNotFound:
             return Error('E1054')
 
-        return 'success', {'posts': marshal(list(Post.select(lambda p: p.blog == blog)), post_marshaller)}
+        return 'success', {'posts': BlogSchema(many=True).dump(blog.posts.select()).data}

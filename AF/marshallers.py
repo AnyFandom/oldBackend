@@ -1,81 +1,86 @@
-from flask_restful import fields
+from marshmallow import Schema, SchemaOpts, fields, post_load, validate
+from AF import app  # , ma
+from AF.models import User, Fandom, Blog, Post, Comment
+from AF.utils import Error
 
 
-class UserField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-            'username': value.username,
-            'avatar': value.avatar
-        }
-
-class FandomField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-            'title': value.title,
-            'avatar': value.avatar
-        }
-
-class BlogField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-            'title': value.title,
-            'avatar': value.avatar,
-            'fandom': FandomField.format(None, value.fandom)
-        }
+class NamespaceOpts(SchemaOpts):
+    def __init__(self, meta):
+        SchemaOpts.__init__(self, meta)
+        self.model = getattr(meta, 'model', None)
 
 
-class IdField(fields.Raw):
-    def format(self, value):
-        return {
-            'id': value.id,
-        }
+class NamespacedSchema(Schema):
+    OPTIONS_CLASS = NamespaceOpts
+
+    def handle_error(self, exc, data):
+        print(exc.messages)
+        raise Error('E1101', exc.messages)
+
+    @post_load(pass_many=True)
+    def make_object(self, data, many):
+        return self.opts.model(**data)
+
+# TODO: Не надо возвращать все, только некоторые поля
 
 
-user_marshaller = {
-    'id': fields.Integer,
-    'username': fields.String,
-    'password': fields.String,
-    'avatar': fields.String,
-    'description': fields.String,
-    'user_salt': fields.String
-}
+class UserSchema(NamespacedSchema):
+    id = fields.Integer(dump_only=True)
+    username = fields.String(validate=validate.Length(**app.config['MIN_MAX']['username']), required=True)
+    password = fields.String(validate=validate.Length(**app.config['MIN_MAX']['password']), required=True, load_only=True)
+    description = fields.String(validate=validate.Length(**app.config['MIN_MAX']['user_description']))
+    avatar = fields.Url()
+    user_salt = fields.String(load_only=True)
+    registration_date = fields.DateTime()
 
-post_marshaller = {
-    'id': fields.Integer,
-    'title': fields.String,
-    'content': fields.String,
-    'preview_image': fields.String,
-    'owner': UserField,
-    'comment_count': fields.Integer,
-    'date': fields.DateTime(dt_format='iso8601'),
-    'blog': BlogField
-}
+    class Meta:
+        model = User
 
-comment_marshaller = {
-    'id': fields.Integer,
-    'content': fields.String,
-    'parent': IdField,
-    'depth': fields.Integer,
-    'post': IdField,
-    'owner': UserField,
-    'date': fields.DateTime(dt_format='iso8601')
-}
 
-fandom_marshaller = {
-    'id': fields.Integer,
-    'title': fields.String,
-    'description': fields.String,
-    'avatar': fields.String
-}
+class FandomSchema(NamespacedSchema):
+    id = fields.Integer(dump_only=True)
+    title = fields.String(validate=validate.Length(**app.config['MIN_MAX']['fandom_title']), required=True)
+    description = fields.String(validate=validate.Length(**app.config['MIN_MAX']['fandom_description']))
+    avatar = fields.Url()
 
-blog_marshaller = {
-    'id': fields.Integer,
-    'title': fields.String,
-    'description': fields.String,
-    'avatar': fields.String,
-    'fandom': FandomField,
-    'owner': UserField
-}
+    class Meta:
+        model = Fandom
+
+
+class BlogSchema(NamespacedSchema):
+    id = fields.Integer(dump_only=True)
+    title = fields.String(validate=validate.Length(**app.config['MIN_MAX']['blog_title']), required=True)
+    description = fields.String(validate=validate.Length(**app.config['MIN_MAX']['blog_description']))
+    avatar = fields.Url()
+    owner = fields.Nested(UserSchema)
+    fandom = fields.Nested(FandomSchema)
+
+    class Meta:
+        model = Blog
+
+
+class PostSchema(NamespacedSchema):
+    id = fields.Integer(dump_only=True)
+    title = fields.String(validate=validate.Length(**app.config['MIN_MAX']['post_title']), required=True)
+    content = fields.String(validate=validate.Length(**app.config['MIN_MAX']['post_content']), required=True)
+    preview_image = fields.Url()
+    owner = fields.Nested(UserSchema)
+    comment_count = fields.Integer()
+    date = fields.DateTime()
+    blog = fields.Nested(BlogSchema)
+
+    class Meta:
+        model = Post
+
+
+class CommentSchema(NamespacedSchema):
+    id = fields.Integer(dump_only=True)
+    content = fields.String(validate=validate.Length(**app.config['MIN_MAX']['comment_content']), required=True)
+    parent = fields.Nested('CommentSchema')
+    depth = fields.Integer()
+    post = fields.Nested(PostSchema)
+    owner = fields.Nested(UserSchema)
+    date = fields.DateTime()
+
+    class Meta:
+        model = Comment
