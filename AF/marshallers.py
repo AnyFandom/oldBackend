@@ -97,8 +97,8 @@ class BlogSchema(TopSchema):
     title = String(validate=validate.Length(**app.config['MIN_MAX']['blog_title']), required=True)
     description = String(validate=validate.Length(**app.config['MIN_MAX']['blog_description']))
     avatar = String()
-    owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
-    fandom = CNested(Fandom, FandomSchema, required=True, only=['id', 'title', 'avatar'])
+    owner = CNested(User, UserSchema, required=True ) #, only=['id', 'username', 'avatar'])
+    fandom = CNested(Fandom, FandomSchema, required=True)  #, only=['id', 'title', 'avatar'])
 
     # links = ma.Hyperlinks({
     #     'self': ma.URLFor('blogitem', id='<id>'),
@@ -111,8 +111,8 @@ class PostSchema(TopSchema):
     content = String(validate=validate.Length(**app.config['MIN_MAX']['post_content']), required=True)
     preview_image = String()
     comment_count = Integer()
-    owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
-    blog = CNested(Blog, BlogSchema, required=True, only=['id', 'title', 'avatar'])
+    owner = CNested(User, UserSchema, required=True)  # , only=['id', 'username', 'avatar'])
+    blog = CNested(Blog, BlogSchema, required=True)  # , only=['id', 'title', 'avatar', 'fandom'])
 
     # links = ma.Hyperlinks({
     #     'self': ma.URLFor('postitem', id='<id>'),
@@ -124,8 +124,8 @@ class CommentSchema(TopSchema):
     content = String(validate=validate.Length(**app.config['MIN_MAX']['comment_content']), required=True)
     parent = CNested(Comment, 'self', only=['id'])  # only=['id', 'content', 'depth', 'owner'])
     depth = Integer()
-    post = CNested(Post, PostSchema, required=True, only=['id', 'title'])
-    owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
+    post = CNested(Post, PostSchema, required=True)  # , only=['id', 'title'])
+    owner = CNested(User, UserSchema, required=True)  # , only=['id', 'username', 'avatar'])
 
     # links = ma.Hyperlinks({
     #     'self': ma.URLFor('commentitem', id='<id>')
