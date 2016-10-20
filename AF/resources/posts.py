@@ -143,6 +143,9 @@ class PostCommentLastItem(Resource):
         except orm.core.ObjectNotFound:
             raise Error('E1065')
 
+        if not authorized():
+            raise Error('E1003')
+
         args = nparser(g.args, ['comment'])
         if not args.get('comment'):
             return 'success', {}

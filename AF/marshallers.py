@@ -117,7 +117,7 @@ class PostSchema(TopSchema):
 
 class CommentSchema(TopSchema):
     content = String(validate=validate.Length(**app.config['MIN_MAX']['comment_content']), required=True)
-    parent = CNested(Comment, 'self', only=['id', 'content', 'depth', 'owner'])
+    parent = CNested(Comment, 'self', only=['id'])  # only=['id', 'content', 'depth', 'owner'])
     depth = Integer()
     post = CNested(Post, PostSchema, required=True, only=['id', 'title'])
     owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
@@ -131,6 +131,6 @@ class CommentSchema(TopSchema):
         if data.get('parent'):
             data['depth'] = data['parent'].depth + 1
             if data['post'] != data['parent'].post:
-                raise CValidationError('Parent is not in same post as new comment.', 'parent')
+                raise CValidationError('Parent does not belong to this post', 'parent')
         else:
             data['depth'] = 0
