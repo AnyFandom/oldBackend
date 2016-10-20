@@ -240,7 +240,7 @@ class TestComments():
     def test_comment_add_with_long_content(self):
         options = {
             'token': token,
-            'content': 'T'*50000,
+            'content': 'T'*50001,
             'post': post['id']
         }
         r = requests.post(BASE_URL+'/comments', data=options)
@@ -354,7 +354,7 @@ class TestComments():
     def test_comment_edit_long_content(self):
         options = {
             'token': token,
-            'content': 'T'*50000
+            'content': 'T'*50001
         }
         r = requests.patch(BASE_URL+'/comments/{}'.format(comment['id']), data=options)
         assert r.status_code > 200

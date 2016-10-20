@@ -27,6 +27,8 @@ class CNested(Nested):
 
     def _deserialize(self, value, attr, data):
         try:
+            if value in [0, '0']:
+                return None
             if not isinstance(value, self.object):
                 value = self.object[value]
         except (orm.core.ObjectNotFound, ValueError):
@@ -51,7 +53,7 @@ class UserSchema(TopSchema):
     username = String(validate=validate.Length(**app.config['MIN_MAX']['username']), required=True)
     password = String(validate=validate.Length(**app.config['MIN_MAX']['password']), required=True, load_only=True)
     description = String(validate=validate.Length(**app.config['MIN_MAX']['user_description']))
-    avatar = Url()
+    avatar = String()
     user_salt = String(load_only=True)
 
     # links = ma.Hyperlinks({
@@ -77,7 +79,7 @@ class UserSchema(TopSchema):
 class FandomSchema(TopSchema):
     title = String(validate=validate.Length(**app.config['MIN_MAX']['fandom_title']), required=True)
     description = String(validate=validate.Length(**app.config['MIN_MAX']['fandom_description']))
-    avatar = Url()
+    avatar = String()
 
     # links = ma.Hyperlinks({
     #     'self': ma.URLFor('fandomitem', id='<id>'),
@@ -89,7 +91,7 @@ class FandomSchema(TopSchema):
 class BlogSchema(TopSchema):
     title = String(validate=validate.Length(**app.config['MIN_MAX']['blog_title']), required=True)
     description = String(validate=validate.Length(**app.config['MIN_MAX']['blog_description']))
-    avatar = Url()
+    avatar = String()
     owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
     fandom = CNested(Fandom, FandomSchema, required=True, only=['id', 'title', 'avatar'])
 
@@ -102,7 +104,7 @@ class BlogSchema(TopSchema):
 class PostSchema(TopSchema):
     title = String(validate=validate.Length(**app.config['MIN_MAX']['post_title']), required=True)
     content = String(validate=validate.Length(**app.config['MIN_MAX']['post_content']), required=True)
-    preview_image = Url()
+    preview_image = String()
     comment_count = Integer()
     owner = CNested(User, UserSchema, required=True, only=['id', 'username', 'avatar'])
     blog = CNested(Blog, BlogSchema, required=True, only=['id', 'title', 'avatar'])

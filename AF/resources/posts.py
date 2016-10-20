@@ -83,7 +83,7 @@ class PostItem(Resource):
         if changes.get('title'):
             post.title = changes['title']
         if changes.get('content'):
-            post.content = changes['title']
+            post.content = changes['content']
         if changes.get('preview_image'):
             post.preview_image = changes['preview_image']
 
@@ -128,7 +128,7 @@ class PostCommentLastItem(Resource):
         if not authorized():
             return 'success', {'last_comment': 0}
 
-        last_comment = LastComment.select(lambda p: p.post==post and p.user==pickle.loads(g.user)).get()
+        last_comment = LastComment.select(lambda p: p.post == post and p.user == pickle.loads(g.user)).get()
         if not last_comment:
             last_comment = LastComment(user=pickle.loads(g.user), post=post, last_id=0)
             db.commit()
@@ -142,18 +142,17 @@ class PostCommentLastItem(Resource):
             post = Post[id]
         except orm.core.ObjectNotFound:
             raise Error('E1065')
-    
-        args = parser(g.args,
-            ('comment', int, False))
+
+        args = nparser(g.args, ['comment'])
         if not args.get('comment'):
             return 'success', {}
 
         if list(post.comments.select(lambda p: p.id == args['comment'])):
-            last_comment = LastComment.select(lambda p: p.post==post and p.user==pickle.loads(g.user)).get()
+            last_comment = LastComment.select(lambda p: p.post == post and p.user == pickle.loads(g.user)).get()
             if last_comment:
                 last_comment.last_id = args['comment']
             else:
-                last_comment = LastComment(user=pickle.loads(g.user),post=post, last_id=args['comment'])
+                last_comment = LastComment(user=pickle.loads(g.user), post=post, last_id=args['comment'])
             db.commit()
             return 'success', {}
         else:
