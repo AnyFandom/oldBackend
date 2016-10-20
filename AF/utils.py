@@ -28,6 +28,7 @@ class Error(Exception):
         'E1065': ['Post with specified ID doesn\'t exists.', 404],
         # COMMENTS
         'E1071': ['Reserved', 400],  # Анти-спам
+        'E1074': ['Comment does not exist or does not belong to this post', 403],
         'E1075': ['Comment with specified ID doesn\'t exists.', 404],
         # OTHER
         'E1101': ['One or multiple required parameters were not transferred or invalid. See "details" for details.', 400],

@@ -8,7 +8,7 @@ from pony import orm
 from AF import db
 
 from AF.utils import authorized, Error, jsend, nparser
-from AF.models import Post, Comment
+from AF.models import Blog, Post, Comment, LastComment
 from AF.marshallers import PostSchema, CommentSchema
 from AF.socket_utils import send_update
 
@@ -63,10 +63,8 @@ class PostItem(Resource):
 
         post.delete()
         db.commit()
-        send_update('post-list')
-        send_update('post', post.id)
 
-        return 'success', None, 201
+        return 'success', None, 200
 
     @jsend
     @orm.db_session
@@ -79,17 +77,17 @@ class PostItem(Resource):
         if post.owner != pickle.loads(g.user):
             raise Error('E1102')
 
-        args = nparser(g.args, ['title', 'content'])
+        args = nparser(g.args, ['title', 'content', 'preview_image'])
         changes = PostSchema(partial=True).load(args).data
 
         if changes.get('title'):
             post.title = changes['title']
         if changes.get('content'):
             post.content = changes['title']
+        if changes.get('preview_image'):
+            post.preview_image = changes['preview_image']
 
         db.commit()
-        send_update('post-list')
-        send_update('post', post.id)
 
         return 'success', None, 200
 
@@ -110,9 +108,53 @@ class PostCommentList(Resource):
                     resp.extend(recursion(comment.answers.order_by(Comment.id)))
                 return resp
 
-            resp = list(Comment.select(lambda p: p.post == post and p.parent is None))  # Получаем все "корневые" комменты
+            resp = Comment.select(lambda p: p.post == post and p.parent is None)  # Получаем все "корневые" комменты
             resp = recursion(resp)  # Рекурсивно формируем список комментов
 
             return 'success', {'comments': CommentSchema(many=True).dump(resp).data}
         else:
             return 'success', {'comments': CommentSchema(many=True).dump(post.comments.select()).data}
+
+
+class PostCommentLastItem(Resource):
+    @jsend
+    @orm.db_session
+    def get(self, id):
+        try:
+            post = Post[id]
+        except orm.core.ObjectNotFound:
+            raise Error('E1065')
+
+        if not authorized():
+            return 'success', {'last_comment': 0}
+
+        last_comment = LastComment.select(lambda p: p.post==post and p.user==pickle.loads(g.user)).get()
+        if not last_comment:
+            last_comment = LastComment(user=pickle.loads(g.user), post=post, last_id=0)
+            db.commit()
+
+        return 'success', {'last_comment': last_comment.last_id}
+
+    @jsend
+    @orm.db_session
+    def patch(self, id):
+        try:
+            post = Post[id]
+        except orm.core.ObjectNotFound:
+            raise Error('E1065')
+    
+        args = parser(g.args,
+            ('comment', int, False))
+        if not args.get('comment'):
+            return 'success', {}
+
+        if list(post.comments.select(lambda p: p.id == args['comment'])):
+            last_comment = LastComment.select(lambda p: p.post==post and p.user==pickle.loads(g.user)).get()
+            if last_comment:
+                last_comment.last_id = args['comment']
+            else:
+                last_comment = LastComment(user=pickle.loads(g.user),post=post, last_id=args['comment'])
+            db.commit()
+            return 'success', {}
+        else:
+            raise Error('E1074')

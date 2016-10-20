@@ -63,10 +63,10 @@ class BlogItem(Resource):
             raise Error('E1102')
 
         blog.delete()
-        db.commit()
         send_update('blog-list', blog.fandom.id)
+        db.commit()
 
-        return 'success', None, 201
+        return 'success', None, 200
 
     @jsend
     @orm.db_session

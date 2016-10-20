@@ -36,8 +36,7 @@ class CommentList(Resource):
         db.commit()
 
         send_update('comment-list', comment.post.id)
-        if comment.parent:
-            print('Notification!')
+        if comment.parent and comment.parent.owner != pickle.loads(g.user):
             send_notification('New answer', 'New answer! ' + comment.content, comment.parent.owner.id)
         return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
 
@@ -65,11 +64,11 @@ class CommentItem(Resource):
             raise Error('E1102')
 
         comment.delete()
-        db.commit()
         send_update('comment-list', comment.post.id)
         send_update('comment', comment.id)
+        db.commit()
 
-        return 'success', None, 201
+        return 'success', None, 200
 
     @jsend
     @orm.db_session

@@ -61,7 +61,7 @@ class FandomItem(Resource):
         send_update('fandom-list')
         send_update('fandom', fandom.id)
 
-        return 'success', None, 201
+        return 'success', None, 200
 
     @jsend
     @orm.db_session

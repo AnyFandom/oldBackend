@@ -15,6 +15,8 @@ from flask_socketio import SocketIO, join_room
 class MyApi(Api):
     def handle_error(self, e):
         code = getattr(e, 'code', 500)
+        if e.__class__.__name__ == 'Error':
+            return handle_error(e)
         if code == 405:  # Больше некуда это пихать чтоб работало
             return handle_error(Error('E1202'))
         else:
@@ -39,7 +41,7 @@ users = {}
 import AF.socket_utils
 from AF.resources.token import Token
 from AF.resources.users import UserList, UserItem, UserPostList, UserCommentList
-from AF.resources.posts import PostList, PostItem, PostCommentList
+from AF.resources.posts import PostList, PostItem, PostCommentList, PostCommentLastItem
 from AF.resources.comments import CommentList, CommentItem
 from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList, FandomPostList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
@@ -69,16 +71,17 @@ api.add_resource(BlogPostList, '/blogs/<int:id>/posts')
 api.add_resource(PostList, '/posts')
 api.add_resource(PostItem, '/posts/<int:id>')
 api.add_resource(PostCommentList, '/posts/<int:id>/comments')
+api.add_resource(PostCommentLastItem, '/posts/<int:id>/comments/last')
 ###
 api.add_resource(CommentList, '/comments')
 api.add_resource(CommentItem, '/comments/<int:id>')
 
+argparser = argparse.ArgumentParser()
+argparser.add_argument('-t', '--testing', default='0')
+namespace = argparser.parse_args(sys.argv[1:])
 
 def init():
     try:
-        argparser = argparse.ArgumentParser()
-        argparser.add_argument('-t', '--testing', default='0')
-        namespace = argparser.parse_args(sys.argv[1:])
         db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)
         db.generate_mapping(create_tables=True)
     except TypeError:
@@ -154,7 +157,7 @@ def handle_init(token):
         return
     user = User.check_auth_token(token)
     if not user:
-        raise Error('E1001')
+        return
 
     if user.id in users.keys():
         users[user.id].append(request.sid)
@@ -193,3 +196,12 @@ def init_env():
     c = Comment(content='Test comment', depth=0, parent=None, post=p, owner=u)
     db.commit()
     return 'success', {'status': 'OK'}
+
+
+@app.route('/clearenv')
+def clearenv():
+    global db
+    if namespace.testing != '0':
+        db.drop_all_tables(with_all_data=True)
+        db.create_tables()
+    return ''

@@ -12,13 +12,14 @@ class User(db.Entity):
     username = orm.Required(str, unique=True)
     password = orm.Required(str)
     description = orm.Optional(str)
-    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
+    avatar = orm.Optional(str, default='/static/img/default_avatar.jpg')
     user_salt = orm.Optional(str, default=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32)))
     created_at = orm.Optional(datetime, default=datetime.utcnow())
 
     posts = orm.Set('Post')
     comments = orm.Set('Comment')
     blogs = orm.Set('Blog')
+    lastComments = orm.Set('LastComment')
 
     def check_password(self, password):
         return self.password == password
@@ -45,11 +46,12 @@ class Post(db.Entity):
 
     title = orm.Required(str)
     content = orm.Required(str)
-    preview_image = orm.Optional(str, default='https://www.betaseries.com/images/fonds/original/3086_1410380644.jpg')
+    preview_image = orm.Optional(str, default='/static/img/default_preview.jpg')
     owner = orm.Required(User)
     comments = orm.Set('Comment')
     created_at = orm.Optional(datetime, default=datetime.utcnow())
     blog = orm.Required('Blog')
+    lastComments = orm.Set('LastComment')
 
 
 class Comment(db.Entity):
@@ -65,7 +67,7 @@ class Comment(db.Entity):
 class Fandom(db.Entity):
     title = orm.Required(str, unique=True)
     description = orm.Optional(str)
-    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
+    avatar = orm.Optional(str, default='/static/img/default_avatar.jpg')
     created_at = orm.Optional(datetime, default=datetime.utcnow())
     blogs = orm.Set('Blog')
 
@@ -73,8 +75,13 @@ class Fandom(db.Entity):
 class Blog(db.Entity):
     title = orm.Required(str)
     description = orm.Optional(str)
-    avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
+    avatar = orm.Optional(str, default='/static/img/default_avatar.jpg')
     created_at = orm.Optional(datetime, default=datetime.utcnow())
     fandom = orm.Required(Fandom)
     posts = orm.Set(Post)
     owner = orm.Required(User)
+
+class LastComment(db.Entity):
+    user = orm.Required('User')
+    post = orm.Required('Post')
+    last_id = orm.Required(int)
