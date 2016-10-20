@@ -27,7 +27,7 @@ class CNested(Nested):
 
     def _deserialize(self, value, attr, data):
         try:
-            if value in [0, '0']:
+            if value in ['', 0, '0']:
                 return None
             if not isinstance(value, self.object):
                 value = self.object[value]
