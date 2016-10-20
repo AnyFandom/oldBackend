@@ -190,7 +190,7 @@ def test_sock():
 @jsend
 @orm.db_session
 def init_env():
-    u = User(username='ADMEN', password='123454321')
+    u = User(username='ADMEN', password_hash=User.hash_password('123454321'))
     f = Fandom(title='Test fandom')
     b = Blog(title='Test blog', fandom=f, owner=u)
     p = Post(title='Test post', content='Lorem ipsum dolor', owner=u, blog=b)
