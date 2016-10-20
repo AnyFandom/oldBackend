@@ -14,7 +14,7 @@ class User(db.Entity):
     description = orm.Optional(str)
     avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
     user_salt = orm.Optional(str, default=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32)))
-    registration_date = orm.Optional(datetime, default=datetime.utcnow())
+    created_at = orm.Optional(datetime, default=datetime.utcnow())
 
     posts = orm.Set('Post')
     comments = orm.Set('Comment')
@@ -48,7 +48,7 @@ class Post(db.Entity):
     preview_image = orm.Optional(str, default='https://www.betaseries.com/images/fonds/original/3086_1410380644.jpg')
     owner = orm.Required(User)
     comments = orm.Set('Comment')
-    date = orm.Optional(datetime, default=datetime.utcnow())
+    created_at = orm.Optional(datetime, default=datetime.utcnow())
     blog = orm.Required('Blog')
 
 
@@ -59,14 +59,14 @@ class Comment(db.Entity):
     depth = orm.Required(int)
     post = orm.Required(Post)
     owner = orm.Required(User)
-    date = orm.Optional(datetime, default=datetime.utcnow())
+    created_at = orm.Optional(datetime, default=datetime.utcnow())
 
 
 class Fandom(db.Entity):
     title = orm.Required(str, unique=True)
     description = orm.Optional(str)
     avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
-    date = orm.Optional(datetime, default=datetime.utcnow())
+    created_at = orm.Optional(datetime, default=datetime.utcnow())
     blogs = orm.Set('Blog')
 
 
@@ -74,7 +74,7 @@ class Blog(db.Entity):
     title = orm.Required(str)
     description = orm.Optional(str)
     avatar = orm.Optional(str, default='https://static.lunavod.ru/img/users/1/avatar_100x100.png')
-    date = orm.Optional(datetime, default=datetime.utcnow())
+    created_at = orm.Optional(datetime, default=datetime.utcnow())
     fandom = orm.Required(Fandom)
     posts = orm.Set(Post)
     owner = orm.Required(User)
