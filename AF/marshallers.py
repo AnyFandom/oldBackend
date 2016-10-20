@@ -1,10 +1,18 @@
-from marshmallow import validate, ValidationError, post_load, Schema
+from marshmallow import validate, ValidationError, post_load, Schema, utils
 from marshmallow.fields import Nested, Integer, String, DateTime
+from marshmallow.compat import basestring
 from pony import orm
 
 from AF import app  # , ma
 from AF.models import User, Fandom, Blog, Post, Comment
 from AF.utils import Error
+
+
+class HString(String):
+    def _deserialize(self, value, attr, data):
+        if not isinstance(value, basestring):
+            self.fail('invalid')
+        return User.hash_password(utils.ensure_text_type(value))
 
 
 class CValidationError(ValidationError):
@@ -56,7 +64,7 @@ class TopSchema(Schema):
 
 class UserSchema(TopSchema):
     username = String(validate=validate.Length(**app.config['MIN_MAX']['username']), required=True)
-    password = String(validate=validate.Length(**app.config['MIN_MAX']['password']), required=True, load_only=True)
+    password = HString(validate=validate.Length(**app.config['MIN_MAX']['password']), required=True, load_only=True, attribute='password_hash')
     description = String(validate=validate.Length(**app.config['MIN_MAX']['user_description']))
     avatar = String()
     user_salt = String(load_only=True)

@@ -1,4 +1,5 @@
 import jwt
+import hashlib
 
 from datetime import datetime
 from pony import orm
@@ -10,7 +11,7 @@ from AF import app, db
 
 class User(db.Entity):
     username = orm.Required(str, unique=True)
-    password = orm.Required(str)
+    password_hash = orm.Required(str)
     description = orm.Optional(str)
     avatar = orm.Optional(str, default='/static/img/default_avatar.jpg')
     user_salt = orm.Optional(str, default=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32)))
@@ -21,8 +22,11 @@ class User(db.Entity):
     blogs = orm.Set('Blog')
     lastComments = orm.Set('LastComment')
 
+    def hash_password(password):
+        return hashlib.sha256(str(password).encode()).hexdigest()
+
     def check_password(self, password):
-        return self.password == password
+        return self.password_hash == hashlib.sha256(password.encode()).hexdigest()
 
     def generate_auth_token(self):
         return jwt.encode({'id': self.id, 'user_salt': self.user_salt}, app.config['SECRET_TOKEN_KEY'], algorithm='HS256')
