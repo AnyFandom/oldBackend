@@ -21,6 +21,7 @@ class User(db.Entity):
     comments = orm.Set('Comment')
     blogs = orm.Set('Blog')
     lastComments = orm.Set('LastComment')
+    readComments = orm.Set('ReadComments')
 
     def hash_password(password):
         return hashlib.sha256(str(password).encode()).hexdigest()
@@ -56,6 +57,7 @@ class Post(db.Entity):
     created_at = orm.Optional(datetime, default=datetime.utcnow())
     blog = orm.Required('Blog')
     lastComments = orm.Set('LastComment')
+    readComments = orm.Set('ReadComments')
 
 
 class Comment(db.Entity):
@@ -66,6 +68,9 @@ class Comment(db.Entity):
     post = orm.Required(Post)
     owner = orm.Required(User)
     created_at = orm.Optional(datetime, default=datetime.utcnow())
+
+    _lc = orm.Set('LastComment')
+    _rc = orm.Set('ReadComments')
 
 
 class Fandom(db.Entity):
@@ -89,4 +94,10 @@ class Blog(db.Entity):
 class LastComment(db.Entity):
     user = orm.Required('User')
     post = orm.Required('Post')
-    last_id = orm.Required(int)
+    comment = orm.Required('Comment')
+
+
+class ReadComments(db.Entity):
+    user = orm.Required('User')
+    post = orm.Required('Post')
+    comment = orm.Required('Comment')

@@ -8,7 +8,7 @@ from pony import orm
 from AF import db
 
 from AF.utils import authorized, Error, jsend, nparser
-from AF.models import Comment
+from AF.models import Comment, ReadComments, LastComment
 from AF.marshallers import CommentSchema
 
 from AF.socket_utils import send_update, send_notification
@@ -100,4 +100,46 @@ class CommentItem(Resource):
         send_update('comment-list', comment.post.id)
         send_update('comment', comment.id)
 
+        return 'success', None, 200
+
+
+class CommentReadItem(Resource):
+    @jsend
+    @orm.db_session
+    def post(self, id):
+        comment = get_comment(id)
+        post = comment.post
+        user = pickle.loads(g.user)
+
+        if not authorized():
+            raise Error('E1102')
+
+        read_comments = list(ReadComments.select(lambda rc: rc.post == post and rc.user==user))
+        last_comment = LastComment.select(lambda lc: lc.post==post and lc.user==user).get()
+
+        if last_comment:
+            last_comment_id = last_comment.comment.id
+        else:
+            last_comment_id = 0
+
+        if not list(ReadComments.select(lambda rc: rc.comment == comment and rc.user==user)) and id > last_comment_id:
+            rc = ReadComments(comment=comment, user=user, post=post)
+            db.commit()
+
+        comments_new = []
+        read_comments_ids = [i.comment.id for i in read_comments]
+
+        for i in post.comments:
+            if i.id > last_comment_id and i.id not in read_comments_ids:
+                comments_new.append(i)
+
+        if not len(comments_new):
+            if last_comment:
+                last_comment.comment = comment
+            else:
+                last_comment = LastComment(post=post, user=user, comment=list(post.comments)[-1])
+            for i in read_comments:
+                i.delete()
+
+        db.commit()
         return 'success', None, 200

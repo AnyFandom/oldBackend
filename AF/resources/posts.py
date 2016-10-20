@@ -8,7 +8,7 @@ from pony import orm
 from AF import db
 
 from AF.utils import authorized, Error, jsend, nparser
-from AF.models import Post, Comment, LastComment
+from AF.models import Post, Comment, LastComment, ReadComments
 from AF.marshallers import PostSchema, CommentSchema
 from AF.socket_utils import send_update
 
@@ -116,41 +116,30 @@ class PostCommentList(Resource):
             return 'success', {'comments': CommentSchema(many=True).dump(post.comments.select()).data}
 
 
-class PostCommentLastItem(Resource):
+class PostCommentsNewItem(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
         post = get_post(id)
 
         if not authorized():
-            return 'success', {'last_comment': 0}
+            return 'success', {'comments': CommentSchema(many=True).dump(list(post.comments)).data}
 
-        last_comment = LastComment.select(lambda p: p.post == post and p.user == pickle.loads(g.user)).get()
-        if not last_comment:
-            last_comment = LastComment(user=pickle.loads(g.user), post=post, last_id=0)
-            db.commit()
+        comments = list(post.comments)
+        comments_new = []
 
-        return 'success', {'last_comment': last_comment.last_id}
+        last_comment = LastComment.select(lambda lc: lc.post==post and lc.user==pickle.loads(g.user)).get()
 
-    @jsend
-    @orm.db_session
-    def patch(self, id):
-        post = get_post(id)
-
-        if not authorized():
-            raise Error('E1003')
-
-        args = nparser(g.args, ['comment'])
-        if not args.get('comment'):
-            return 'success', {}
-
-        if list(post.comments.select(lambda p: p.id == args['comment'])):
-            last_comment = LastComment.select(lambda p: p.post == post and p.user == pickle.loads(g.user)).get()
-            if last_comment:
-                last_comment.last_id = args['comment']
-            else:
-                last_comment = LastComment(user=pickle.loads(g.user), post=post, last_id=args['comment'])
-            db.commit()
-            return 'success', {}
+        if last_comment:
+            last_comment_id = last_comment.comment.id
         else:
-            raise Error('E1074')
+            last_comment_id = 0
+
+        read_comments = list(ReadComments.select(lambda rc: rc.post==post and rc.user==pickle.loads(g.user)))
+        read_comments_ids = [i.comment.id for i in read_comments]
+
+        for i in comments:
+            if i.id > last_comment_id and i.id not in read_comments_ids:
+                comments_new.append(i)
+
+        return 'success', {'comments': CommentSchema(many=True).dump(comments_new).data}

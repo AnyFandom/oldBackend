@@ -41,8 +41,8 @@ users = {}
 import AF.socket_utils
 from AF.resources.token import Token
 from AF.resources.users import UserList, UserItem, UserPostList, UserCommentList
-from AF.resources.posts import PostList, PostItem, PostCommentList, PostCommentLastItem
-from AF.resources.comments import CommentList, CommentItem
+from AF.resources.posts import PostList, PostItem, PostCommentList, PostCommentsNewItem
+from AF.resources.comments import CommentList, CommentItem, CommentReadItem
 from AF.resources.fandoms import FandomList, FandomItem, FandomBlogList, FandomPostList
 from AF.resources.blogs import BlogList, BlogItem, BlogPostList
 from AF.utils import jsend
@@ -71,10 +71,11 @@ api.add_resource(BlogPostList, '/blogs/<int:id>/posts')
 api.add_resource(PostList, '/posts')
 api.add_resource(PostItem, '/posts/<int:id>')
 api.add_resource(PostCommentList, '/posts/<int:id>/comments')
-api.add_resource(PostCommentLastItem, '/posts/<int:id>/comments/last')
+api.add_resource(PostCommentsNewItem, '/posts/<int:id>/comments/new')
 ###
 api.add_resource(CommentList, '/comments')
 api.add_resource(CommentItem, '/comments/<int:id>')
+api.add_resource(CommentReadItem, '/comments/<int:id>/read')
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('-t', '--testing', default='0')
@@ -194,7 +195,7 @@ def init_env():
     f = Fandom(title='Test fandom')
     b = Blog(title='Test blog', fandom=f, owner=u)
     p = Post(title='Test post', content='Lorem ipsum dolor', owner=u, blog=b)
-    c = Comment(content='Test comment', depth=0, parent=None, post=p, owner=u)
+    c = Comment(content='Test comment', depth=0, post=p, owner=u)
     db.commit()
     return 'success', {'status': 'OK'}
 
