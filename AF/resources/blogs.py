@@ -5,11 +5,11 @@ from flask_restful import Resource
 
 from pony import orm
 
-from AF import app, db
+from AF import db
 
 from AF.utils import authorized, Error, jsend, nparser
-from AF.models import Fandom, Blog
-from AF.marshallers import UserSchema, FandomSchema, BlogSchema
+from AF.models import Blog
+from AF.marshallers import BlogSchema
 from AF.socket_utils import send_update
 
 

@@ -8,7 +8,7 @@ from pony import orm
 from AF import db
 
 from AF.utils import authorized, Error, jsend, nparser
-from AF.models import Blog, Post, Comment, LastComment
+from AF.models import Post, Comment, LastComment
 from AF.marshallers import PostSchema, CommentSchema
 from AF.socket_utils import send_update
 
@@ -120,10 +120,7 @@ class PostCommentLastItem(Resource):
     @jsend
     @orm.db_session
     def get(self, id):
-        try:
-            post = Post[id]
-        except orm.core.ObjectNotFound:
-            raise Error('E1065')
+        post = get_post(id)
 
         if not authorized():
             return 'success', {'last_comment': 0}
@@ -138,10 +135,7 @@ class PostCommentLastItem(Resource):
     @jsend
     @orm.db_session
     def patch(self, id):
-        try:
-            post = Post[id]
-        except orm.core.ObjectNotFound:
-            raise Error('E1065')
+        post = get_post(id)
 
         if not authorized():
             raise Error('E1003')

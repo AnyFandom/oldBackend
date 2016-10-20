@@ -81,6 +81,7 @@ class Blog(db.Entity):
     posts = orm.Set(Post)
     owner = orm.Required(User)
 
+
 class LastComment(db.Entity):
     user = orm.Required('User')
     post = orm.Required('Post')

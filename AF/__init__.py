@@ -80,6 +80,7 @@ argparser = argparse.ArgumentParser()
 argparser.add_argument('-t', '--testing', default='0')
 namespace = argparser.parse_args(sys.argv[1:])
 
+
 def init():
     try:
         db.bind('sqlite', 'database_file.sqlite' if namespace.testing == '0' else ':memory:', create_db=True)

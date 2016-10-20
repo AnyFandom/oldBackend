@@ -18,7 +18,6 @@ def send_update(type, id=None):
     socketio.emit('update_request', {'type': type, 'id': id})
 
 
-
 def send_notification(title, body, id):
     try:
         socketio.emit('notification', {'options': {'title': title, 'body': body}}, room=users[id][0])

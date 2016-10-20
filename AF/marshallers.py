@@ -1,5 +1,5 @@
 from marshmallow import validate, ValidationError, post_load, Schema
-from marshmallow.fields import Nested, Integer, String, DateTime, Url
+from marshmallow.fields import Nested, Integer, String, DateTime
 from pony import orm
 
 from AF import app  # , ma
@@ -43,6 +43,11 @@ class TopSchema(Schema):
 
     def handle_error(self, exc, data):
         raise Error('E1101', exc.messages)
+
+    @post_load
+    def is_changed(self, data):
+        if self.partial and not data:
+            raise Error('IGNORE_PATCH')
 
 
 # TODO: Не надо возвращать все, только некоторые поля
