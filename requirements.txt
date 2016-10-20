@@ -8,3 +8,4 @@ pony
 termcolor
 eventlet
 pytest
+marshmallow
