@@ -1,5 +1,6 @@
 # utils.py
 
+from AF import app
 from flask import g
 import bleach
 
@@ -103,31 +104,6 @@ def isnum(arg):
 def authorized():
     return True if g.get('user', None) else False
 
-ALLOWED_TAGS = [
-    'a',
-    'abbr',
-    'acronym',
-    'b',
-    's',
-    'blockquote',
-    'code',
-    'em',
-    'i',
-    'li',
-    'ol',
-    'strong',
-    'ul',
-    'br',
-    'img',
-]
-
-ALLOWED_ATTRIBUTES = {
-    'a': ['href', 'title'],
-    'abbr': ['title'],
-    'acronym': ['title'],
-    'img': ['src', 'alt', 'width', 'height'],
-}
-
 
 def clear(text):
-    return bleach.linkify(bleach.clean(text, strip=True, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES))
+    return bleach.linkify(bleach.clean(text, strip=True, tags=app.config['ALLOWED_TAGS'], attributes=app.config['ALLOWED_ATTRIBUTES']))
