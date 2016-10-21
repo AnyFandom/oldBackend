@@ -104,6 +104,9 @@ class CommentItem(Resource):
 
 
 class CommentReadItem(Resource):
+
+    # TODO: ТЕСТЫ-ТЕСТЫ-ТЕСТЫ
+
     @jsend
     @orm.db_session
     def post(self, id):

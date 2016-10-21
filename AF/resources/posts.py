@@ -117,6 +117,9 @@ class PostCommentList(Resource):
 
 
 class PostCommentsNewItem(Resource):
+
+    # TODO: ТЕСТЫ-ТЕСТЫ-ТЕСТЫ
+
     @jsend
     @orm.db_session
     def get(self, id):
