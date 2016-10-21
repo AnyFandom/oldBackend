@@ -22,8 +22,6 @@ comment_location = ''
 answer = {}
 answer_location = ''
 
-last_comment = None
-
 
 def setup_module(module):
     requests.get(BASE_URL+'/clearenv')
@@ -370,62 +368,6 @@ class TestComments():
         assert comment['content'] != options['content']
         self.test_comment_get_by_location()
         assert comment['content'] == options['content']
-
-
-    #
-    # Test last_comment
-    #
-
-
-    def test_lastComment_get_without_token(self):
-        options = {
-        }
-        r = requests.get(BASE_URL+'/posts/{}/comments/last'.format(post['id']), params=options)
-        assert r.status_code == 200
-        data = r.json()['data']
-        print(data)
-        assert 'last_comment' in data
-
-
-    def test_lastComment_get(self):
-        global last_comment
-        options = {
-            'token': token,
-        }
-        r = requests.get(BASE_URL+'/posts/{}/comments/last'.format(post['id']), params=options)
-        assert r.status_code == 200
-        data = r.json()['data']
-        print(data)
-        assert 'last_comment' in data
-        last_comment = data['last_comment']
-
-
-    def test_lastComment_set_without_token(self):
-        options = {
-            'comment': comment['id'],
-        }
-        r = requests.patch(BASE_URL+'/posts/{}/comments/last'.format(post['id']), data=options)
-        assert r.status_code > 200
-
-
-    def test_lastComment_set_without_comment(self):
-        options = {
-            'token': token,
-        }
-        r = requests.patch(BASE_URL+'/posts/{}/comments/last'.format(post['id']), data=options)
-        assert r.status_code == 200
-
-
-    def test_lastComment_set(self):
-        options = {
-            'token': token,
-            'comment': comment['id']
-        }
-        r = requests.patch(BASE_URL+'/posts/{}/comments/last'.format(post['id']), data=options)
-        assert r.status_code == 200
-        assert last_comment < options['comment']
-        self.test_lastComment_get()
-        assert last_comment == options['comment']
 
 
 
