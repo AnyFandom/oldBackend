@@ -11,7 +11,7 @@ from AF.utils import authorized, Error, jsend, nparser, get_comments_new
 from AF.models import Comment, ReadComments, LastComment
 from AF.marshallers import CommentSchema
 
-from AF.socket_utils import send_update, send_notification
+from AF.socket_utils import send_update, send_notification, send
 
 
 def get_comment(id):
@@ -36,6 +36,7 @@ class CommentList(Resource):
         db.commit()
 
         send_update('comment-list', comment.post.id)
+        send('comment.add', CommentSchema().dump(comment).data)
         if comment.parent and comment.parent.owner != pickle.loads(g.user):
             send_notification('New answer', 'New answer! ' + comment.content, comment.parent.owner.id)
         return 'success', {'Location': url_for('commentitem', id=comment.id)}, 201
