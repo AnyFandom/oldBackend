@@ -92,9 +92,9 @@ class UserItem(Resource):
         args = nparser(g.args, ['password_old', 'password', 'avatar', 'description'])
         changes = UserSchema(partial=True).load(args).data  # Вместо кучи вызовов between
 
-        if changes.get('password'):
+        if changes.get('password_hash'):
             if user.check_password(args.get('password_old')):
-                user.password = changes['password']
+                user.password_hash = changes['password_hash']
                 user.user_salt = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32))
             else:
                 if not args.get('password_old'):

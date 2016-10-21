@@ -1,6 +1,8 @@
-from marshmallow import validate, ValidationError, post_load, Schema, utils
+from marshmallow import validate, post_load, Schema, utils
 from marshmallow.fields import Nested, Integer, String, DateTime
 from marshmallow.compat import basestring
+from marshmallow.exceptions import ValidationError
+from marshmallow.validate import Validator
 from pony import orm
 
 from AF import app  # , ma
@@ -9,9 +11,19 @@ from AF.utils import Error, clear
 
 
 class HString(String):
+    def __init__(self, validate=None, **kwargs):
+        self.validators = []
+        self.validator = validate
+        super(HString, self).__init__(**kwargs)
+
     def _deserialize(self, value, attr, data):
         if not isinstance(value, basestring):
             self.fail('invalid')
+
+        r = self.validator(value)
+        if not isinstance(self.validator, Validator) and r is False:
+            self.fail('validator_failed')
+
         return User.hash_password(utils.ensure_text_type(value))
 
 
