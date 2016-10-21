@@ -7,7 +7,7 @@ from pony import orm
 
 from AF import db
 
-from AF.utils import authorized, Error, jsend, nparser
+from AF.utils import authorized, Error, jsend, nparser, get_comments_new
 from AF.models import Comment, ReadComments, LastComment
 from AF.marshallers import CommentSchema
 
@@ -114,7 +114,6 @@ class CommentReadItem(Resource):
         if not authorized():
             raise Error('E1102')
 
-        read_comments = list(ReadComments.select(lambda rc: rc.post == post and rc.user==user))
         last_comment = LastComment.select(lambda lc: lc.post==post and lc.user==user).get()
 
         if last_comment:
@@ -126,20 +125,14 @@ class CommentReadItem(Resource):
             rc = ReadComments(comment=comment, user=user, post=post)
             db.commit()
 
-        comments_new = []
-        read_comments_ids = [i.comment.id for i in read_comments]
-
-        for i in post.comments:
-            if i.id > last_comment_id and i.id not in read_comments_ids:
-                comments_new.append(i)
+        comments_new = get_comments_new(user, post, last_comment_id)
 
         if not len(comments_new):
             if last_comment:
                 last_comment.comment = comment
             else:
                 last_comment = LastComment(post=post, user=user, comment=list(post.comments)[-1])
-            for i in read_comments:
-                i.delete()
+            orm.delete(rc for rc in ReadComments if rc.post==post and rc.user==user)
 
         db.commit()
         return 'success', None, 200

@@ -7,7 +7,7 @@ from pony import orm
 
 from AF import db
 
-from AF.utils import authorized, Error, jsend, nparser
+from AF.utils import authorized, Error, jsend, nparser, get_comments_new
 from AF.models import Post, Comment, LastComment, ReadComments
 from AF.marshallers import PostSchema, CommentSchema
 from AF.socket_utils import send_update
@@ -125,8 +125,6 @@ class PostCommentsNewItem(Resource):
         if not authorized():
             return 'success', {'comments': CommentSchema(many=True).dump(list(post.comments)).data}
 
-        comments = list(post.comments)
-        comments_new = []
 
         last_comment = LastComment.select(lambda lc: lc.post==post and lc.user==pickle.loads(g.user)).get()
 
@@ -135,11 +133,6 @@ class PostCommentsNewItem(Resource):
         else:
             last_comment_id = 0
 
-        read_comments = list(ReadComments.select(lambda rc: rc.post==post and rc.user==pickle.loads(g.user)))
-        read_comments_ids = [i.comment.id for i in read_comments]
-
-        for i in comments:
-            if i.id > last_comment_id and i.id not in read_comments_ids:
-                comments_new.append(i)
+        comments_new = get_comments_new(pickle.loads(g.user), post, last_comment_id)
 
         return 'success', {'comments': CommentSchema(many=True).dump(comments_new).data}

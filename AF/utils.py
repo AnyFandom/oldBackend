@@ -3,6 +3,7 @@
 from AF import app
 from flask import g
 import bleach
+from AF.models import ReadComments
 
 
 class Error(Exception):
@@ -107,3 +108,14 @@ def authorized():
 
 def clear(text):
     return bleach.linkify(bleach.clean(text, strip=True, tags=app.config['ALLOWED_TAGS'], attributes=app.config['ALLOWED_ATTRIBUTES']))
+
+
+def get_comments_new(user, post, last_comment_id):
+    read_comments = list(ReadComments.select(lambda rc: rc.post == post and rc.user==user))
+    comments_new = []
+    read_comments_ids = [i.comment.id for i in read_comments]
+
+    for i in post.comments:
+        if i.id > last_comment_id and i.id not in read_comments_ids:
+            comments_new.append(i)
+    return comments_new
