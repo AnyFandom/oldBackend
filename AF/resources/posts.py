@@ -136,3 +136,31 @@ class PostCommentsNewItem(Resource):
         comments_new = get_comments_new(pickle.loads(g.user), post, last_comment_id)
 
         return 'success', {'comments': CommentSchema(many=True).dump(comments_new).data}
+
+    @jsend
+    @orm.db_session
+    def post(self, id):
+        post = get_post(id)
+
+        if not authorized():
+            return 'success', {'comments': CommentSchema(many=True).dump(list(post.comments)).data}
+
+        user = pickle.loads(g.user)
+
+        last_comment = LastComment.select(lambda lc: lc.post==post and lc.user==user).get()
+
+        post_comments = list(post.comments)
+        post_comments.sort(key=lambda c: c.id)
+
+        if last_comment:
+            last_comment.comment = post_comments[-1]
+        else:
+            last_comment = LastComment(post=post, user=user, comment=post_comments[-1])
+
+        print(last_comment.comment)
+
+        orm.delete(rc for rc in ReadComments if rc.post==post and rc.user==user)
+
+        db.commit()
+
+        return 'success', None, 200
